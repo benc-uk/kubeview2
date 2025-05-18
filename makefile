@@ -16,7 +16,7 @@ lint: ## 🔍 Lint & format check only, sets exit code on error for CI
 	@figlet $@ || true
 	go tool -modfile=dev/tools.mod golangci-lint run -c dev/golangci.yaml
 
-lint-fix: ## ✨ Lint & format fix
+lint-fix: ## ✨ Lint & try to format & fix
 	@figlet $@ || true
 	go tool -modfile=dev/tools.mod golangci-lint run -c dev/golangci.yaml --fix
 
@@ -24,10 +24,10 @@ run: ## 🏃 Run application, used for local development
 	@figlet $@ || true
 	@go tool -modfile=dev/tools.mod air -c dev/air.toml
 
-build: ## 🏗️ Build application
+build: ## 🏗️ Build application binary
 	@figlet $@ || true
 	go build -o bin/server ./server
 	
-clean: ## 🧹 Clean up, remove dev data and files
+clean: ## 🧹 Clean up and reset
 	@figlet $@ || true
 	@rm -rf tmp bin

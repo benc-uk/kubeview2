@@ -1,6 +1,8 @@
+html,
 body {
   margin: 0;
   padding: 0;
+  overflow-y: auto;
 }
 
 form {
@@ -8,12 +10,22 @@ form {
   padding: 0;
 }
 
+#mainView {
+  width: 100%;
+  height: 80vh;
+}
+
 .htmx-indicator {
   display: none;
+  position: absolute;
 }
-.htmx-request .htmx-indicator {
-  display: inline;
-}
+
 .htmx-request.htmx-indicator {
-  display: inline;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  top: 100px;
+  height: max(80px, 14vh);
+  width: 100%;
+  z-index: 10;
 }
