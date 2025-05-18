@@ -1,0 +1,6 @@
+{
+  "[templ]": {
+    "editor.defaultFormatter": "a-h.templ",
+    "editor.formatOnSave": true
+  }
+}

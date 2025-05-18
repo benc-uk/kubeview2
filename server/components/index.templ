@@ -1,0 +1,43 @@
+package components
+
+templ Index() {
+	<html lang="en">
+		<head>
+			@htmlHeader()
+		</head>
+		<body>
+			<section class="section">
+				<div class="container">
+					<h1 class="title">
+						KubeView II
+					</h1>
+					<div class="field">
+						<label class="label">Namespace</label>
+						<div class="control">
+							<div class="select" hx-trigger="load" hx-get="c/namespaces"></div>
+						</div>
+					</div>
+				</div>
+			</section>
+			@pageFooter()
+		</body>
+	</html>
+}
+
+templ htmlHeader() {
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>KubeView 2</title>
+	<link rel="stylesheet" href="public/css/bulma.min.css"/>
+	<link rel="stylesheet" href="public/css/main.css"/>
+	<link rel="icon" href="public/favicon.ico" type="image/x-icon"/>
+	<script src="public/ext/htmx.min.js"></script>
+}
+
+templ pageFooter() {
+	<footer class="footer p-3">
+		<div class="content has-text-right">
+			<p>&copy; 2025 Ben Coleman <a href="#">[GitHub Project]</a></p>
+		</div>
+	</footer>
+}

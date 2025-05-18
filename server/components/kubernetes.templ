@@ -1,0 +1,10 @@
+package components
+
+templ SelectNamespace(nameSpaces []string) {
+	<select hx-get="c/namespace/dave">
+		<option disabled selected>Choose a namespace</option>
+		for _, item := range nameSpaces {
+			<option value="{item}">{ item }</option>
+		}
+	</select>
+}
