@@ -24,9 +24,14 @@ templ Index() {
 						<div class="navbar-item">
 							<form>
 								<div class="field">
-									<div class="select" hx-disabled-elt hx-trigger="load" hx-get="namespaces" hx-indicator="#spinner">
+									<div class="select" hx-trigger="load" hx-get="namespaces" hx-indicator="#spinner" id="namespaceSelect">
 										<select></select>
 									</div>
+									<button class="button is-link" hx-get="namespaces" hx-target="#namespaceSelect" hx-indicator="#spinner">
+										<span class="icon">
+											<i class="fas fa-rotate fa-fw"></i>
+										</span>
+									</button>
 								</div>
 							</form>
 						</div>
@@ -46,8 +51,9 @@ templ htmlHeader() {
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 	<title>KubeView v2</title>
-	<link rel="stylesheet" href="public/css/bulma.min.css"/>
-	<link rel="stylesheet" href="public/css/main.css"/>
 	<link rel="icon" href="public/img/icon.png" type="image/png"/>
+	<link rel="stylesheet" href="public/ext/bulma.min.css"/>
+	<link rel="stylesheet" href="public/css/main.css"/>
 	<script src="public/ext/htmx.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
 }

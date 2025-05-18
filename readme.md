@@ -4,6 +4,10 @@ KubeView 2 is a Kubernetes cluster visualization tool that provides a graphical 
 
 See the [original KubeView project](https://github.com/benc-uk/kubeview) for more information.
 
+## Very WIP
+
+![](./docs/msedge_gROKAFrsda.png)
+
 ## Goals
 
 The goal of this rewrite is to create a more maintainable codebase. Some choices that have been made to achieve this goal are:

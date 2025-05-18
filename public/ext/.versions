@@ -1,0 +1,5 @@
+# As we don't have a package manager, keep track of the versions of the libraries we use.
+# Updated 05/18/2025
+
+Bulma = v1.0.4
+HTMX = v2.04
