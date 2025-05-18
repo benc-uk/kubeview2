@@ -6,20 +6,38 @@ templ Index() {
 			@htmlHeader()
 		</head>
 		<body>
-			<section class="section">
-				<div class="container">
-					<h1 class="title">
-						KubeView II
-					</h1>
-					<div class="field">
-						<label class="label">Namespace</label>
-						<div class="control">
-							<div class="select" hx-trigger="load" hx-get="c/namespaces"></div>
+			<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+				<div class="navbar-brand">
+					<a class="navbar-item" href="/">
+						<img src="public/img/icon.png" alt="Logo" width="32" height="32"/>
+						<span class="is-hidden-mobile is-size-4 has-text-weight-semibold">KubeView</span>
+					</a>
+					<a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+						<span aria-hidden="true"></span>
+						<span aria-hidden="true"></span>
+						<span aria-hidden="true"></span>
+						<span aria-hidden="true"></span>
+					</a>
+				</div>
+				<div id="navbarBasicExample" class="navbar-menu">
+					<div class="navbar-start">
+						<div class="navbar-item">
+							<form>
+								<div class="field">
+									<div class="select" hx-disabled-elt hx-trigger="load" hx-get="namespaces" hx-indicator="#spinner">
+										<select></select>
+									</div>
+								</div>
+							</form>
 						</div>
 					</div>
+					<div class="navbar-end"></div>
 				</div>
-			</section>
-			@pageFooter()
+			</nav>
+			<section class="section" id="podList"></section>
+			<div class="container is-flex is-justify-content-center htmx-indicator" id="spinner">
+				<img src="public/img/spinner-grid.svg"/>
+			</div>
 		</body>
 	</html>
 }
@@ -27,17 +45,9 @@ templ Index() {
 templ htmlHeader() {
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
-	<title>KubeView 2</title>
+	<title>KubeView v2</title>
 	<link rel="stylesheet" href="public/css/bulma.min.css"/>
 	<link rel="stylesheet" href="public/css/main.css"/>
-	<link rel="icon" href="public/favicon.ico" type="image/x-icon"/>
+	<link rel="icon" href="public/img/icon.png" type="image/png"/>
 	<script src="public/ext/htmx.min.js"></script>
-}
-
-templ pageFooter() {
-	<footer class="footer p-3">
-		<div class="content has-text-right">
-			<p>&copy; 2025 Ben Coleman <a href="#">[GitHub Project]</a></p>
-		</div>
-	</footer>
 }

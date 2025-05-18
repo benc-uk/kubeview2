@@ -37,15 +37,7 @@ func Index() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body><section class=\"section\"><div class=\"container\"><h1 class=\"title\">KubeView II</h1><div class=\"field\"><label class=\"label\">Namespace</label><div class=\"control\"><div class=\"select\" hx-trigger=\"load\" hx-get=\"c/namespaces\"></div></div></div></div></section>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = pageFooter().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body><nav class=\"navbar is-dark\" role=\"navigation\" aria-label=\"main navigation\"><div class=\"navbar-brand\"><a class=\"navbar-item\" href=\"/\"><img src=\"public/img/icon.png\" alt=\"Logo\" width=\"32\" height=\"32\"> <span class=\"is-hidden-mobile is-size-4 has-text-weight-semibold\">KubeView</span></a> <a role=\"button\" class=\"navbar-burger\" aria-label=\"menu\" aria-expanded=\"false\" data-target=\"navbarBasicExample\"><span aria-hidden=\"true\"></span> <span aria-hidden=\"true\"></span> <span aria-hidden=\"true\"></span> <span aria-hidden=\"true\"></span></a></div><div id=\"navbarBasicExample\" class=\"navbar-menu\"><div class=\"navbar-start\"><div class=\"navbar-item\"><form><div class=\"field\"><div class=\"select\" hx-disabled-elt hx-trigger=\"load\" hx-get=\"namespaces\" hx-indicator=\"#spinner\"><select></select></div></div></form></div></div><div class=\"navbar-end\"></div></div></nav><section class=\"section\" id=\"podList\"></section><div class=\"container is-flex is-justify-content-center htmx-indicator\" id=\"spinner\"><img src=\"public/img/spinner-grid.svg\"></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -74,36 +66,7 @@ func htmlHeader() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>KubeView 2</title><link rel=\"stylesheet\" href=\"public/css/bulma.min.css\"><link rel=\"stylesheet\" href=\"public/css/main.css\"><link rel=\"icon\" href=\"public/favicon.ico\" type=\"image/x-icon\"><script src=\"public/ext/htmx.min.js\"></script>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-func pageFooter() templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<footer class=\"footer p-3\"><div class=\"content has-text-right\"><p>&copy; 2025 Ben Coleman <a href=\"#\">[GitHub Project]</a></p></div></footer>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>KubeView v2</title><link rel=\"stylesheet\" href=\"public/css/bulma.min.css\"><link rel=\"stylesheet\" href=\"public/css/main.css\"><link rel=\"icon\" href=\"public/img/icon.png\" type=\"image/png\"><script src=\"public/ext/htmx.min.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,7 +1,6 @@
 -include dev/.env
 export
 
-# Internal variables you don't want to change
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 SHELL := /bin/bash
 
@@ -15,12 +14,20 @@ help: ## 💬 This help message :)
 
 lint: ## 🔍 Lint & format check only, sets exit code on error for CI
 	@figlet $@ || true
-	go tool -modfile=dev/tools.mod golangci-lint run -c dev/golangci.yaml --timeout 3m
+	go tool -modfile=dev/tools.mod golangci-lint run -c dev/golangci.yaml
+
+lint-fix: ## ✨ Lint & format fix
+	@figlet $@ || true
+	go tool -modfile=dev/tools.mod golangci-lint run -c dev/golangci.yaml --fix
 
 run: ## 🏃 Run application, used for local development
 	@figlet $@ || true
 	@go tool -modfile=dev/tools.mod air -c dev/air.toml
 
+build: ## 🏗️ Build application
+	@figlet $@ || true
+	go build -o bin/server ./server
+	
 clean: ## 🧹 Clean up, remove dev data and files
 	@figlet $@ || true
-	@rm -rf tmp
+	@rm -rf tmp bin

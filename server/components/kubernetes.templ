@@ -1,10 +1,22 @@
 package components
 
+import coreV1 "k8s.io/api/core/v1"
+
 templ SelectNamespace(nameSpaces []string) {
-	<select hx-get="c/namespace/dave">
+	<select hx-get="pods" hx-target="#podList" name="namespace">
 		<option disabled selected>Choose a namespace</option>
 		for _, item := range nameSpaces {
-			<option value="{item}">{ item }</option>
+			<option value={ item }>{ item }</option>
 		}
 	</select>
+}
+
+templ ListPods(pods []coreV1.Pod) {
+	<ul class="list">
+		for _, pod := range pods {
+			<li class="list-item">
+				<a href="#" class="has-text-weight-semibold">{ pod.Name } = { pod.Status.Phase }</a>
+			</li>
+		}
+	</ul>
 }

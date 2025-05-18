@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/benc-uk/kubeview2/server/components"
@@ -25,40 +24,45 @@ func NewServer(r *chi.Mux, ks *services.Kubernetes) *server {
 		http.StripPrefix("/public/", http.FileServer(http.Dir("public"))).ServeHTTP(w, r)
 	})
 
-	r.Get("/", s.handleIndex)
-	r.Get("/healthz", s.handleHealth)
-	r.Get("/health", s.handleHealth)
-	r.Get("/c/namespaces", s.handleNamespaces)
+	// App routes
+	r.Get("/", s.index)
+	r.Get("/namespaces", s.fragNamespace)
+	r.Get("/pods", s.fragPods)
 
 	return s
 }
 
-func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	if s.healthy {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte("Service Unavailable"))
-	}
-}
-
-func (s *server) handleIndex(w http.ResponseWriter, r *http.Request) {
+func (s *server) index(w http.ResponseWriter, r *http.Request) {
 	err := components.Index().Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}
 }
 
-func (s *server) handleNamespaces(w http.ResponseWriter, r *http.Request) {
+func (s *server) fragNamespace(w http.ResponseWriter, r *http.Request) {
 	nsList, err := s.kubeService.GetNamespaces()
 	if err != nil {
-		log.Println("Error fetching namespaces:", err)
 		s.return500(w)
+
 		return
 	}
 
 	err = components.SelectNamespace(nsList).Render(r.Context(), w)
+	if err != nil {
+		s.return500(w)
+	}
+}
+
+func (s *server) fragPods(w http.ResponseWriter, r *http.Request) {
+	ns := r.URL.Query().Get("namespace")
+
+	podList, err := s.kubeService.GetPods(ns)
+	if err != nil {
+		s.return500(w)
+		return
+	}
+
+	err = components.ListPods(podList).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}

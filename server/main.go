@@ -21,7 +21,11 @@ func main() {
 		port = "8000"
 	}
 
-	ks := services.NewKubernetes()
+	ks, err := services.NewKubernetes()
+	if err != nil {
+		log.Fatalf("💩 Unable to connect to Kubernetes. The app will exit")
+	}
+
 	NewServer(r, ks)
 
 	httpServer := &http.Server{
