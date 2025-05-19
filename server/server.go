@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -14,36 +16,46 @@ import (
 type server struct {
 	healthy     bool
 	kubeService *services.Kubernetes
-	sseStreamer *sse.Streamer[string]
 }
 
-func NewServer(r *chi.Mux, ks *services.Kubernetes) *server {
-	sseStream := sse.NewStreamer[string]()
+func NewServer(r *chi.Mux) *server {
+	sseBroker := sse.NewBroker[types.KubeEvent]()
 
-	// Send the time to the user every 2 second
-	go func() {
-		for {
-			timeNow := time.Now().Format("15:04:05")
-			sseStream.Messages <- "Hello it is now " + timeNow
-			time.Sleep(3 * time.Second)
+	sseBroker.MessageAdapter = func(ke types.KubeEvent, clientID string) sse.SSE {
+		objJson, err := json.Marshal(ke.Object)
+		if err != nil {
+			log.Printf("💩 Error marshalling object: %v", err)
+			return sse.SSE{
+				Data:  "Error marshalling object",
+				Event: "error",
+			}
 		}
-	}()
 
-	sseStream.MessageAdapter = func(msg string) sse.SSE {
 		return sse.SSE{
-			Data:  "ssss" + msg,
-			Event: "added",
+			Data:  string(objJson),
+			Event: ke.EventType,
 		}
 	}
 
-	r.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
-		sseStream.Stream(w, *r)
-	})
+	// Start a heartbeat to keep the connection alive, sent to all clients
+	go func() {
+		for {
+			sseBroker.SendToAll(types.KubeEvent{
+				EventType: "ping",
+				Object:    nil,
+			})
+			time.Sleep(10 * time.Second)
+		}
+	}()
+
+	ks, err := services.NewKubernetes(sseBroker)
+	if err != nil {
+		log.Fatalf("💩 Unable to connect to Kubernetes. The app will exit")
+	}
 
 	s := &server{
 		healthy:     true,
 		kubeService: ks,
-		sseStreamer: sseStream,
 	}
 
 	// Serve the public folder
@@ -55,6 +67,19 @@ func NewServer(r *chi.Mux, ks *services.Kubernetes) *server {
 	r.Get("/", s.index)
 	r.Get("/namespaces", s.fragNamespace)
 	r.Get("/load", s.loadNamespace)
+
+	// Special SSE route for streaming events
+	r.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
+		clientID := r.URL.Query().Get("clientID")
+		if clientID == "" {
+			http.Error(w, "clientID is required", http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("⚡ SSE Client connected: %s", clientID)
+
+		sseBroker.Stream(clientID, w, *r)
+	})
 
 	return s
 }
@@ -83,31 +108,14 @@ func (s *server) fragNamespace(w http.ResponseWriter, r *http.Request) {
 func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	ns := r.URL.Query().Get("namespace")
 
-	podList, err := s.kubeService.GetPods(ns)
+	data, err := s.kubeService.FetchNamespace(ns)
 	if err != nil {
+		log.Printf("💩 Error fetching namespace: %v", err)
 		s.return500(w)
 		return
 	}
 
-	serviceList, err := s.kubeService.GetServices(ns)
-	if err != nil {
-		s.return500(w)
-		return
-	}
-
-	deploymentList, err := s.kubeService.GetDeployments(ns)
-	if err != nil {
-		s.return500(w)
-		return
-	}
-
-	data := types.NamespaceData{
-		Pods:        podList,
-		Services:    serviceList,
-		Deployments: deploymentList,
-	}
-
-	err = components.NamespaceLoaded(data).Render(r.Context(), w)
+	err = components.PassNamespaceData(ns, data).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}

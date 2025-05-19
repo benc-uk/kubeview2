@@ -3,7 +3,7 @@ package components
 import "github.com/benc-uk/kubeview2/server/types"
 
 templ SelectNamespace(nameSpaces []string) {
-	<select hx-get="load" hx-target="#dummy" name="namespace" hx-indicator="#spinner">
+	<select hx-get="load" hx-target="#dummy" name="namespace" hx-indicator="#spin">
 		<option disabled selected>Choose a namespace</option>
 		for _, item := range nameSpaces {
 			<option value={ item }>{ item }</option>
@@ -11,8 +11,8 @@ templ SelectNamespace(nameSpaces []string) {
 	</select>
 }
 
-templ NamespaceLoaded(data types.NamespaceData) {
-	// This is voodoo magic
-	// Calls a JS function, on the client side, how? Don't ask me...
-	@templ.JSFuncCall("namespaceLoaded", data)
+templ PassNamespaceData(ns string, data types.NamespaceData) {
+	// This is almost true magic
+	// Calls a JS function, on the client side, how? Don't ask...
+	@templ.JSFuncCall("namespaceLoaded", ns, data)
 }

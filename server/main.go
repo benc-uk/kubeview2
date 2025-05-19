@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/benc-uk/kubeview2/server/services"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -20,12 +19,7 @@ func main() {
 		port = "8000"
 	}
 
-	ks, err := services.NewKubernetes()
-	if err != nil {
-		log.Fatalf("💩 Unable to connect to Kubernetes. The app will exit")
-	}
-
-	NewServer(r, ks)
+	NewServer(r)
 
 	httpServer := &http.Server{
 		Addr:    ":" + port,
