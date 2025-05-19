@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/benc-uk/go-rest-api/pkg/sse"
-	"github.com/benc-uk/kubeview2/server/components"
 	"github.com/benc-uk/kubeview2/server/services"
+	"github.com/benc-uk/kubeview2/server/templates"
 	"github.com/benc-uk/kubeview2/server/types"
 	"github.com/go-chi/chi/v5"
 )
@@ -90,7 +90,7 @@ func NewServer(r *chi.Mux) *server {
 }
 
 func (s *server) index(w http.ResponseWriter, r *http.Request) {
-	err := components.Index().Render(r.Context(), w)
+	err := templates.Index().Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}
@@ -104,7 +104,7 @@ func (s *server) fragNamespace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = components.SelectNamespace(nsList).Render(r.Context(), w)
+	err = templates.SelectNamespace(nsList).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}
@@ -121,7 +121,7 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = components.PassNamespaceData(ns, data).Render(r.Context(), w)
+	err = templates.PassNamespaceData(ns, data).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}

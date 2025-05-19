@@ -22,9 +22,9 @@ func main() {
 	NewServer(r)
 
 	httpServer := &http.Server{
-		Addr:              ":" + port,
-		Handler:           r,
-		ReadHeaderTimeout: 5 * 60 * 1000,
+		Addr:    ":" + port,
+		Handler: r,
+		// ReadHeaderTimeout: 5 * 60 * 1000,
 	}
 
 	log.Printf("🚀 Server starting on port %s...\n", port)

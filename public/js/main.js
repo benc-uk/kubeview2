@@ -56,6 +56,7 @@ updateStream.onopen = function () {
 window.namespaceLoaded = function (ns, data) {
   console.log(`📚 Namespace '${ns}' data loaded`)
   namespace = ns
+  window.history.replaceState({}, '', `?ns=${ns}`)
 
   // Replace null values with empty arrays, to simplify the code later
   for (const k of Object.keys(data)) {
@@ -107,7 +108,24 @@ window.reset = function () {
     cy.destroy()
     cy = null
   }
+
+  namespace = null
   document.getElementById('mainView').innerHTML = ''
+
+  // Get the namespace from the URL
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.has('ns')) {
+    const urlNamespace = urlParams.get('ns')
+
+    if (urlNamespace) {
+      setTimeout(() => {
+        const event = new Event('change')
+        const select = document.getElementById('namespaceSelect').firstChild
+        select.value = urlNamespace
+        select.dispatchEvent(event)
+      }, 100)
+    }
+  }
 }
 
 function addResource(res) {
