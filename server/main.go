@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/benc-uk/kubeview2/server/services"
 	"github.com/go-chi/chi/v5"
@@ -29,10 +28,8 @@ func main() {
 	NewServer(r, ks)
 
 	httpServer := &http.Server{
-		Addr:         ":" + port,
-		Handler:      r,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+		Addr:    ":" + port,
+		Handler: r,
 	}
 
 	log.Printf("🚀 Server starting on port %s...\n", port)

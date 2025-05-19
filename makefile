@@ -24,10 +24,14 @@ run: ## 🏃 Run application, used for local development
 	@figlet $@ || true
 	@go tool -modfile=dev/tools.mod air -c dev/air.toml
 
-build: ## 🏗️ Build application binary
+build: generate ## 🏗️ Build application binary
 	@figlet $@ || true
 	go build -o bin/server ./server
-	
+
+generate: ## 🗺️ Compile templ templates
+	@figlet $@ || true
+	go tool templ generate
+
 clean: ## 🧹 Clean up and reset
 	@figlet $@ || true
 	@rm -rf tmp bin

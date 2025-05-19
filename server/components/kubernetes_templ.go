@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import coreV1 "k8s.io/api/core/v1"
+import "github.com/benc-uk/kubeview2/server/types"
 
 func SelectNamespace(nameSpaces []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -31,7 +31,7 @@ func SelectNamespace(nameSpaces []string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<select hx-get=\"pods\" hx-target=\"#namespaceLoaded\" name=\"namespace\" hx-indicator=\"#spinner\"><option disabled selected>Choose a namespace</option> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<select hx-get=\"load\" hx-target=\"#dummy\" name=\"namespace\" hx-indicator=\"#spinner\"><option disabled selected>Choose a namespace</option> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -75,7 +75,7 @@ func SelectNamespace(nameSpaces []string) templ.Component {
 	})
 }
 
-func ListPods(pods []coreV1.Pod) templ.Component {
+func NamespaceLoaded(data types.NamespaceData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -96,7 +96,7 @@ func ListPods(pods []coreV1.Pod) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.JSFuncCall("namespaceLoaded", pods).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templ.JSFuncCall("namespaceLoaded", data).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

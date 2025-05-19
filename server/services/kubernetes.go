@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	appsV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -52,6 +53,7 @@ func NewKubernetes() (*Kubernetes, error) {
 	}, nil
 }
 
+// Get namespaces
 func (k *Kubernetes) GetNamespaces() ([]string, error) {
 	namespaces := []string{}
 
@@ -69,6 +71,7 @@ func (k *Kubernetes) GetNamespaces() ([]string, error) {
 	return namespaces, nil
 }
 
+// Get pods
 func (k *Kubernetes) GetPods(namespace string) ([]coreV1.Pod, error) {
 	if namespace == "" {
 		log.Println("💥 No namespace provided")
@@ -83,6 +86,40 @@ func (k *Kubernetes) GetPods(namespace string) ([]coreV1.Pod, error) {
 	}
 
 	return podList.Items, nil
+}
+
+// Get services
+func (k *Kubernetes) GetServices(namespace string) ([]coreV1.Service, error) {
+	if namespace == "" {
+		log.Println("💥 No namespace provided")
+		return nil, nil
+	}
+
+	// Use the clientset to get the list of services in the specified namespace
+	serviceList, err := k.clientset.CoreV1().Services(namespace).List(context.TODO(), metaV1.ListOptions{})
+	if err != nil {
+		log.Println("💥 Failed to get services:", err)
+		return nil, err
+	}
+
+	return serviceList.Items, nil
+}
+
+// Get deployments
+func (k *Kubernetes) GetDeployments(namespace string) ([]appsV1.Deployment, error) {
+	if namespace == "" {
+		log.Println("💥 No namespace provided")
+		return nil, nil
+	}
+
+	// Use the clientset to get the list of deployments in the specified namespace
+	deploymentList, err := k.clientset.AppsV1().Deployments(namespace).List(context.TODO(), metaV1.ListOptions{})
+	if err != nil {
+		log.Println("💥 Failed to get deployments:", err)
+		return nil, err
+	}
+
+	return deploymentList.Items, nil
 }
 
 func inCluster() bool {
