@@ -22,9 +22,10 @@ func NewServer(r *chi.Mux) *server {
 	sseBroker := sse.NewBroker[types.KubeEvent]()
 
 	sseBroker.MessageAdapter = func(ke types.KubeEvent, clientID string) sse.SSE {
-		objJson, err := json.Marshal(ke.Object)
+		json, err := json.Marshal(ke.Object)
 		if err != nil {
 			log.Printf("💩 Error marshalling object: %v", err)
+
 			return sse.SSE{
 				Data:  "Error marshalling object",
 				Event: "error",
@@ -32,7 +33,7 @@ func NewServer(r *chi.Mux) *server {
 		}
 
 		return sse.SSE{
-			Data:  string(objJson),
+			Data:  string(json),
 			Event: ke.EventType,
 		}
 	}
@@ -78,7 +79,11 @@ func NewServer(r *chi.Mux) *server {
 
 		log.Printf("⚡ SSE Client connected: %s", clientID)
 
-		sseBroker.Stream(clientID, w, *r)
+		err := sseBroker.Stream(clientID, w, *r)
+		if err != nil {
+			log.Fatalln("💩 Error streaming SSE:", err)
+			return
+		}
 	})
 
 	return s
@@ -112,6 +117,7 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("💩 Error fetching namespace: %v", err)
 		s.return500(w)
+
 		return
 	}
 

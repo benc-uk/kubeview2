@@ -49,20 +49,22 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 	}
 
 	log.Println("⚡ Connected to Kubernetes:", kubeConfig.Host)
+
 	dynamicClient, err := dynamic.NewForConfig(kubeConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynamicClient, time.Minute, coreV1.NamespaceAll, nil)
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
+		dynamicClient, time.Minute, coreV1.NamespaceAll, nil)
 
-	factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}).
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
-	factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}).
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
-	factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}).
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 
@@ -80,11 +82,13 @@ func (k *Kubernetes) GetNamespaces() ([]string, error) {
 
 	// Use the dynamicClient to get the list of namespaces
 	gvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "namespaces"}
+
 	l, err := k.dynamicClient.Resource(gvr).List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
 		log.Println("💥 Failed to get namespaces:", err)
 		return nil, err
 	}
+
 	// Iterate over the namespaces and add them to the list
 	for _, ns := range l.Items {
 		out = append(out, ns.GetName())
@@ -128,8 +132,10 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 }
 
 // Generic function to any sort of k8s resource
-func (k *Kubernetes) getResources(ns string, group string, version string, resource string) ([]unstructured.Unstructured, error) {
+func (k *Kubernetes) getResources(
+	ns string, group string, version string, resource string) ([]unstructured.Unstructured, error) {
 	gvr := schema.GroupVersionResource{Group: group, Version: version, Resource: resource}
+
 	l, err := k.dynamicClient.Resource(gvr).Namespace(ns).List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
 		log.Printf("💥 Failed to get %s %v", resource, err)
