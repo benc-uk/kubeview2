@@ -4,7 +4,6 @@ templ Index() {
 	<html lang="en">
 		<head>
 			@htmlHeader()
-			<script src="public/js/main.js" type="module"></script>
 		</head>
 		<body>
 			<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
@@ -57,4 +56,6 @@ templ htmlHeader() {
 		crossorigin="anonymous"
 		referrerpolicy="no-referrer"
 	/>
+	<!-- These are our main application scripts & entry point-->
+	<script src="public/js/main.js" type="module"></script>
 }

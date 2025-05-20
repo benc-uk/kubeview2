@@ -121,6 +121,17 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check every key in the data map and see if it has any items
+	totalItems := 0
+	for _, v := range data {
+		totalItems += len(v)
+	}
+
+	if totalItems == 0 {
+		templates.NoData(ns).Render(r.Context(), w)
+		return
+	}
+
 	err = templates.PassNamespaceData(ns, data).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)

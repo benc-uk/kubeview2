@@ -12,7 +12,21 @@ templ SelectNamespace(nameSpaces []string) {
 }
 
 templ PassNamespaceData(ns string, data types.NamespaceData) {
+	<div hx-swap-oob="true" id="mainView"></div>
 	// This is almost true magic
 	// Calls a JS function, on the client side, how? Don't ask...
 	@templ.JSFuncCall("namespaceLoaded", ns, data)
+}
+
+templ NoData(ns string) {
+	<div hx-swap-oob="true" id="mainView">
+		<div class="notification is-dark mx-5 mt-5">
+			<p class="title is-3">No data available</p>
+			<p>Try selecting a different namespace</p>
+		</div>
+	</div>
+	<script>
+		window.history.replaceState({}, '', `?ns={{ ns }}`);
+		console.log("🫙 No data available for namespace {{ ns }}");
+	</script>
 }
