@@ -1,4 +1,4 @@
-export default {
+export const nodeStyle = {
   'background-opacity': 0,
   label: 'data(label)',
   'background-fit': 'cover',

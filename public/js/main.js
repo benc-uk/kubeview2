@@ -1,61 +1,20 @@
 import cytoscape from '../ext/cytoscape/cytoscape.esm.mjs'
-import nodeStyle from './cyto-styles/node.js'
+import { initEventStreaming } from './events.js'
+import { nodeStyle } from './styles.js'
 
 let cy = null
 let namespace = null
 
-// Generate or fetch random client token
-localStorage.getItem('clientId') || localStorage.setItem('clientId', Math.random().toString(36).substring(2, 15))
-const clientId = localStorage.getItem('clientId')
-console.log('🆔 Client ID:', clientId)
-
-console.log('🌐 Opening event stream...')
-const updateStream = new EventSource(`/updates?clientID=${clientId}`, {})
-
-updateStream.addEventListener('add', function (event) {
-  if (!cy) return
-  const res = JSON.parse(event.data)
-  if (res.metadata.namespace !== namespace) return
-
-  console.log('⬆️ Add object:', res.kind, res.metadata.name)
-
-  if (res.kind === 'Pod') addResource(res)
-  if (res.kind === 'Service') addResource(res)
-  if (res.kind === 'Deployment') addResource(res)
-
-  cy.layout({
-    name: 'grid',
-  }).run()
+window.addEventListener('DOMContentLoaded', () => {
+  initEventStreaming()
 })
-
-updateStream.addEventListener('delete', function (event) {
-  if (!cy) return
-  const data = JSON.parse(event.data)
-  if (data.metadata.namespace !== namespace) return
-  console.log('☠️ Delete object:', data.kind, data.metadata.name)
-
-  if (data.kind === 'Pod') {
-    cy.remove('#' + data.metadata.uid)
-  } else if (data.kind === 'Service') {
-    cy.remove('#' + data.metadata.uid)
-  } else if (data.kind === 'Deployment') {
-    cy.remove('#' + data.metadata.uid)
-  }
-
-  cy.layout({
-    name: 'grid',
-  }).run()
-})
-
-updateStream.onopen = function () {
-  console.log('📚 Event stream ready:', updateStream.readyState === 1)
-}
 
 // Define this function in the global scope
 // Not a fan of this, but I can find no other option with the HTML/templ approach
 window.namespaceLoaded = function (ns, data) {
   console.log(`📚 Namespace '${ns}' data loaded`)
   namespace = ns
+
   window.history.replaceState({}, '', `?ns=${ns}`)
 
   // Replace null values with empty arrays, to simplify the code later
@@ -102,6 +61,9 @@ window.namespaceLoaded = function (ns, data) {
   }).run()
 }
 
+//
+// When the user changes the namespace, we need to reset the graph
+//
 window.reset = function () {
   console.log('🔄 Resetting namespace')
   if (cy !== null) {
@@ -112,12 +74,14 @@ window.reset = function () {
   namespace = null
   document.getElementById('mainView').innerHTML = ''
 
-  // Get the namespace from the URL
+  // This is used when the page is loaded with a namespace in the URL
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.has('ns')) {
     const urlNamespace = urlParams.get('ns')
 
     if (urlNamespace) {
+      // This is used to trigger the change event on the select element
+      // It's hacky, but it works
       setTimeout(() => {
         const event = new Event('change')
         const select = document.getElementById('namespaceSelect').firstChild
@@ -128,8 +92,11 @@ window.reset = function () {
   }
 }
 
-function addResource(res) {
-  console.log(' > Add', res.kind, res.metadata.name)
+//
+// This function is used to add a resource to the graph
+//
+export function addResource(res) {
+  if (!cy) return
 
   cy.add({
     data: {
@@ -142,15 +109,37 @@ function addResource(res) {
   })
 }
 
+export function updateResource(res) {
+  if (!cy) return
+
+  const node = cy.getElementById(res.metadata.uid)
+  if (node.length === 0) return
+
+  node.data({
+    resource: true,
+    statusColour: statusColour(res),
+    id: res.metadata.uid,
+    label: res.metadata.name,
+    icon: res.kind.toLowerCase(),
+  })
+}
+
+//
+// This function is used to remove a resource from the graph
+//
+export function removeResource(res) {
+  if (!cy) return
+  cy.remove('#' + res.metadata.uid)
+}
+
 //
 // This function is used to calculate the status colour of the resource
-// Used to set the colour of the icon of certain resources
 //
-function statusColour(res) {
+export function statusColour(res) {
   if (res.kind === 'Deployment') {
     const availCond = res.status.conditions.find((c) => c.type == 'Available') || null
     if (availCond && availCond.status == 'True') return 'green'
-    return red
+    return 'red'
   }
 
   if (res.kind === 'ReplicaSet') {
@@ -174,7 +163,21 @@ function statusColour(res) {
     if (res.status.phase == 'Failed') return 'red'
     if (res.status.phase == 'Succeeded') return 'green'
     if (res.status.phase == 'Pending') return 'grey'
+
+    return 'grey'
   }
 
   return null
+}
+
+export function activeNamespace() {
+  return namespace
+}
+
+export function layout() {
+  if (cy) {
+    cy.layout({
+      name: 'grid',
+    }).run()
+  }
 }
