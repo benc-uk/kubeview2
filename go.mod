@@ -6,7 +6,7 @@ tool github.com/a-h/templ/cmd/templ
 
 require (
 	github.com/a-h/templ v0.3.865
-	github.com/benc-uk/go-rest-api v1.0.12
+	github.com/benc-uk/go-rest-api v1.0.13
 	github.com/go-chi/chi/v5 v5.2.1
 	k8s.io/api v0.33.1
 	k8s.io/apimachinery v0.33.1

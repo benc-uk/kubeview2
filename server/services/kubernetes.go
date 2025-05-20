@@ -58,6 +58,7 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
 		dynamicClient, time.Minute, coreV1.NamespaceAll, nil)
 
+	// Add listening event handlers for ALL resources we want to track
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
@@ -65,6 +66,12 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}).
+		Informer().
+		AddEventHandler(getHandlerFuncs(sseBroker))
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "replicasets"}).
+		Informer().
+		AddEventHandler(getHandlerFuncs(sseBroker))
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 
@@ -102,43 +109,29 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 		return nil, errors.New("namespace is empty")
 	}
 
-	podList, err := k.getResources(ns, "", "v1", "pods")
-	if err != nil {
-		return nil, err
-	}
-
-	serviceList, err := k.getResources(ns, "", "v1", "services")
-	if err != nil {
-		return nil, err
-	}
-
-	deploymentList, err := k.getResources(ns, "apps", "v1", "deployments")
-	if err != nil {
-		return nil, err
-	}
-
-	replicaSetList, err := k.getResources(ns, "apps", "v1", "replicasets")
-	if err != nil {
-		return nil, err
-	}
+	podList, _ := k.getResources(ns, "", "v1", "pods")
+	serviceList, _ := k.getResources(ns, "", "v1", "services")
+	deploymentList, _ := k.getResources(ns, "apps", "v1", "deployments")
+	replicaSetList, _ := k.getResources(ns, "apps", "v1", "replicasets")
+	statefulSetList, _ := k.getResources(ns, "apps", "v1", "statefulsets")
 
 	data := make(map[string][]unstructured.Unstructured)
 	data["pods"] = podList
 	data["services"] = serviceList
 	data["deployments"] = deploymentList
 	data["replicasets"] = replicaSetList
+	data["statefulsets"] = statefulSetList
 
 	return data, nil
 }
 
-// Generic function to any sort of k8s resource
-func (k *Kubernetes) getResources(
-	ns string, group string, version string, resource string) ([]unstructured.Unstructured, error) {
-	gvr := schema.GroupVersionResource{Group: group, Version: version, Resource: resource}
+// Generic function to list resources from a specific namespace
+func (k *Kubernetes) getResources(ns string, grp string, ver string, res string) ([]unstructured.Unstructured, error) {
+	gvr := schema.GroupVersionResource{Group: grp, Version: ver, Resource: res}
 
 	l, err := k.dynamicClient.Resource(gvr).Namespace(ns).List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
-		log.Printf("💥 Failed to get %s %v", resource, err)
+		log.Printf("💥 Failed to get %s %v", res, err)
 		return nil, err
 	}
 

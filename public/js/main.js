@@ -1,3 +1,8 @@
+// ==========================================================================================
+// Main JavaScript entry point for KubeView
+// Handles the main cytoscape graph and data load from the server
+// Provides functions to add, update, and remove resources from the graph
+// ==========================================================================================
 import cytoscape from '../ext/cytoscape/cytoscape.esm.mjs'
 import { initEventStreaming } from './events.js'
 import { nodeStyle } from './styles.js'
@@ -5,26 +10,25 @@ import { nodeStyle } from './styles.js'
 let cy = null
 let namespace = null
 
+// Set up the event streaming for live updates once the DOM is loaded
 window.addEventListener('DOMContentLoaded', () => {
   initEventStreaming()
 })
 
-// Define this function in the global scope
-// Not a fan of this, but I can find no other option with the HTML/templ approach
-window.namespaceLoaded = function (ns, data) {
+//
+// Global function to load the namespace data
+// This function is called from the server side template when the namespace is loaded
+//
+globalThis.namespaceLoaded = function (ns, data) {
   console.log(`📚 Namespace '${ns}' data loaded`)
   namespace = ns
 
   window.history.replaceState({}, '', `?ns=${ns}`)
 
-  // Replace null values with empty arrays, to simplify the code later
-  for (const k of Object.keys(data)) {
-    if (data[k] === null) data[k] = []
-  }
-
   // This is why we are here, Cytoscape will be used to render all the data
   cy = cytoscape({
     container: document.getElementById('mainView'),
+    boxSelectionEnabled: false,
   })
 
   cy.style().selector('node[resource]').style(nodeStyle)
@@ -35,59 +39,75 @@ window.namespaceLoaded = function (ns, data) {
         ? `public/img/res/${ele.data('icon')}-${ele.data('statusColour')}.svg`
         : `public/img/res/${ele.data('icon')}.svg`
     })
+  cy.style().selector('node:selected').style({
+    'border-width': '4',
+    'border-color': 'rgb(0, 120, 215)',
+  })
 
   window.addEventListener('resize', function () {
     if (cy) {
       cy.resize()
-      cy.layout({
-        name: 'grid',
-      }).run()
     }
+
+    layout()
   })
 
-  // Add all the resources to the graph
-  for (const resTypeKey of Object.keys(data)) {
-    const resList = data[resTypeKey]
-    if (resList.length === 0) continue
+  console.dir(data)
 
-    console.log(`🔄 Adding ${resList.length} ${resTypeKey}`)
-    for (const res of resList) {
+  // Pass 1 - Add ALL the resources to the graph
+  for (const kindKey in data) {
+    const kind = data[kindKey]
+    for (const res of kind) {
+      // Add the resource to the graph
       addResource(res)
     }
   }
 
-  cy.layout({
-    name: 'grid',
-  }).run()
+  // Pass 2 - Add links between using metadata.ownerReferences
+  for (const kindKey in data) {
+    const kind = data[kindKey]
+    for (const res of kind) {
+      if (res.metadata.ownerReferences) {
+        for (const ownerRef of res.metadata.ownerReferences) {
+          addEdge(ownerRef.uid, res.metadata.uid)
+        }
+      }
+    }
+  }
+
+  layout()
 }
 
 //
 // When the user changes the namespace, we need to reset the graph
 //
-window.reset = function () {
+globalThis.reset = function () {
+  namespace = null
+
   console.log('🔄 Resetting namespace')
   if (cy !== null) {
     cy.destroy()
     cy = null
   }
 
-  namespace = null
-  document.getElementById('mainView').innerHTML = ''
+  const mv = document.getElementById('mainView')
+  if (mv) {
+    mv.innerHTML = ''
+  }
+}
 
+window.firstLoad = function () {
   // This is used when the page is loaded with a namespace in the URL
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.has('ns')) {
     const urlNamespace = urlParams.get('ns')
+    namespace = urlNamespace
 
     if (urlNamespace) {
-      // This is used to trigger the change event on the select element
-      // It's hacky, but it works
-      setTimeout(() => {
-        const event = new Event('change')
-        const select = document.getElementById('namespaceSelect').firstChild
-        select.value = urlNamespace
-        select.dispatchEvent(event)
-      }, 100)
+      const event = new Event('change')
+      const select = document.getElementById('namespaceSelect').firstChild
+      select.value = urlNamespace
+      select.dispatchEvent(event)
     }
   }
 }
@@ -98,15 +118,7 @@ window.reset = function () {
 export function addResource(res) {
   if (!cy) return
 
-  cy.add({
-    data: {
-      resource: true,
-      statusColour: statusColour(res),
-      id: res.metadata.uid,
-      label: res.metadata.name,
-      icon: res.kind.toLowerCase(),
-    },
-  })
+  cy.add(makeNode(res))
 }
 
 export function updateResource(res) {
@@ -115,13 +127,9 @@ export function updateResource(res) {
   const node = cy.getElementById(res.metadata.uid)
   if (node.length === 0) return
 
-  node.data({
-    resource: true,
-    statusColour: statusColour(res),
-    id: res.metadata.uid,
-    label: res.metadata.name,
-    icon: res.kind.toLowerCase(),
-  })
+  const n = makeNode(res)
+
+  node.data(n.data)
 }
 
 //
@@ -133,9 +141,38 @@ export function removeResource(res) {
 }
 
 //
+// Link two nodes together
+//
+export function addEdge(sourceId, targetId) {
+  try {
+    // This is the syntax Cytoscape uses for creating edges
+    // We form a compound ID from the source and target IDs
+    cy.add({ data: { id: `${sourceId}.${targetId}`, source: sourceId, target: targetId } })
+  } catch (e) {
+    console.warn(`### Unable to add link: ${sourceId} to ${targetId}`)
+  }
+}
+
+//
+// This function is used to create a node object for Cytoscape from the k8s resource
+//
+function makeNode(res) {
+  return {
+    data: {
+      resource: true,
+      statusColour: statusColour(res),
+      id: res.metadata.uid,
+      label: res.metadata.name,
+      icon: res.kind.toLowerCase(),
+      kind: res.kind,
+    },
+  }
+}
+
+//
 // This function is used to calculate the status colour of the resource
 //
-export function statusColour(res) {
+function statusColour(res) {
   if (res.kind === 'Deployment') {
     const availCond = res.status.conditions.find((c) => c.type == 'Available') || null
     if (availCond && availCond.status == 'True') return 'green'
@@ -148,6 +185,12 @@ export function statusColour(res) {
     return 'red'
   }
 
+  if (res.kind === 'StatefulSet') {
+    if (res.status.replicas == 0) return 'grey'
+    if (res.status.replicas == res.status.readyReplicas) return 'green'
+    return 'red'
+  }
+
   if (res.kind === 'DaemonSet') {
     if (res.status.numberReady == res.status.desiredNumberScheduled) return 'green'
     if (res.status.desiredNumberScheduled == 0) return 'grey'
@@ -155,6 +198,9 @@ export function statusColour(res) {
   }
 
   if (res.kind === 'Pod') {
+    // Weird way to check for terminaing pods, it's not anywhere else!
+    if (res.metadata.deletionTimestamp) return 'red'
+
     if (res.status && res.status.conditions) {
       const readyCond = res.status.conditions.find((c) => c.type == 'Ready')
       if (readyCond && readyCond.status == 'True') return 'green'
@@ -175,9 +221,13 @@ export function activeNamespace() {
 }
 
 export function layout() {
-  if (cy) {
-    cy.layout({
-      name: 'grid',
-    }).run()
-  }
+  if (!cy) return
+
+  // Use breadthfirst with Deployments or DaemonSets or StatefulSets at the root
+  cy.layout({
+    name: 'breadthfirst',
+    roots: cy.nodes('[kind = "Deployment"],[kind = "DaemonSet"],[kind = "StatefulSet"]'),
+    nodeDimensionsIncludeLabels: true,
+    spacingFactor: 1,
+  }).run()
 }

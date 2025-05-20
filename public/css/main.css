@@ -3,6 +3,7 @@ body {
   margin: 0;
   padding: 0;
   overflow-y: auto;
+  height: 100%;
 }
 
 form {
@@ -12,20 +13,26 @@ form {
 
 #mainView {
   width: 100%;
-  height: 80vh;
+  height: calc(100% - 60px);
+  background-color: #0a0b0d;
+}
+
+#spinner {
+  display: flex;
+  position: fixed;
+  top: 100px;
+  z-index: 1000;
+  justify-content: center;
+  margin-top: 4vh;
+  width: 100%;
 }
 
 .htmx-indicator {
   display: none;
-  position: absolute;
 }
-
+.htmx-request .htmx-indicator {
+  display: inline;
+}
 .htmx-request.htmx-indicator {
-  display: flex;
-  justify-content: center;
-  position: absolute;
-  top: 100px;
-  height: max(80px, 14vh);
-  width: 100%;
-  z-index: 10;
+  display: inline;
 }

@@ -59,17 +59,17 @@ func NewServer(r *chi.Mux) *server {
 		kubeService: ks,
 	}
 
-	// Serve the public folder
+	// Serve the public folder, which contains static files, JS, CSS, images, etc.
 	r.HandleFunc("/public/*", func(w http.ResponseWriter, r *http.Request) {
 		http.StripPrefix("/public/", http.FileServer(http.Dir("public"))).ServeHTTP(w, r)
 	})
 
 	// App routes
-	r.Get("/", s.index)
-	r.Get("/namespaces", s.fragNamespace)
-	r.Get("/load", s.loadNamespace)
+	r.Get("/", s.index)                        // Serve the index page
+	r.Get("/namespaces", s.fetchNamespaceList) // Return a list of namespaces
+	r.Get("/load", s.loadNamespace)            // Load resources in a namespace and return the data
 
-	// Special SSE route for streaming events
+	// Special route for SSE streaming events to connected clients
 	r.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
 		clientID := r.URL.Query().Get("clientID")
 		if clientID == "" {
@@ -96,7 +96,7 @@ func (s *server) index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *server) fragNamespace(w http.ResponseWriter, r *http.Request) {
+func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 	nsList, err := s.kubeService.GetNamespaces()
 	if err != nil {
 		s.return500(w)
@@ -104,7 +104,7 @@ func (s *server) fragNamespace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = templates.SelectNamespace(nsList).Render(r.Context(), w)
+	err = templates.NamespacePicker(nsList).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}

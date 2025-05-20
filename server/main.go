@@ -3,32 +3,32 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
+
+var version = "0.0.1"
 
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
-	}
+	config := getConfig()
 
+	log.Printf("🚀 KubeView %s starting on port %d...\n", version, config.Port)
+
+	// This configures the HTTP server, routing and SSE connection
 	NewServer(r)
 
 	//nolint:gosec
 	httpServer := &http.Server{
-		Addr:    ":" + port,
+		Addr:    ":" + strconv.Itoa(config.Port),
 		Handler: r,
 		// Do not set ReadHeaderTimeout it messes with the SSE connection
 	}
-
-	log.Printf("🚀 Server starting on port %s...\n", port)
 
 	if err := httpServer.ListenAndServe(); err != nil {
 		log.Fatalf("💥 Server failed to start: %v", err)

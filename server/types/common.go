@@ -10,3 +10,9 @@ type KubeEvent struct {
 	EventType string
 	Object    *unstructured.Unstructured
 }
+
+type Config struct {
+	Port                 int
+	HideSystemNamespaces bool
+	SingleNamespace      string
+}
