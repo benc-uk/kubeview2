@@ -128,7 +128,7 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if totalItems == 0 {
-		templates.NoData(ns).Render(r.Context(), w)
+		_ = templates.NoData(ns).Render(r.Context(), w)
 		return
 	}
 

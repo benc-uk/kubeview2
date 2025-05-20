@@ -21,10 +21,11 @@ func main() {
 
 	NewServer(r)
 
+	//nolint:gosec
 	httpServer := &http.Server{
 		Addr:    ":" + port,
 		Handler: r,
-		// ReadHeaderTimeout: 5 * 60 * 1000,
+		// Do not set ReadHeaderTimeout it messes with the SSE connection
 	}
 
 	log.Printf("🚀 Server starting on port %s...\n", port)
