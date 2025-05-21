@@ -52,6 +52,8 @@ globalThis.namespaceLoaded = function (ns, data) {
     layout()
   })
 
+  // Debug only
+  console.log('🐞 DEBUG! Received data:')
   console.dir(data)
 
   // Pass 1 - Add ALL the resources to the graph
@@ -174,6 +176,8 @@ function makeNode(res) {
 //
 function statusColour(res) {
   if (res.kind === 'Deployment') {
+    if (res.status == {} || !res.status.conditions) return 'grey'
+
     const availCond = res.status.conditions.find((c) => c.type == 'Available') || null
     if (availCond && availCond.status == 'True') return 'green'
     return 'red'

@@ -4,7 +4,7 @@
 // ==========================================================================================
 import { activeNamespace, layout, removeResource, addResource, updateResource, addEdge } from './main.js'
 
-const DEBUG = false
+const DEBUG = true
 
 export function initEventStreaming() {
   // Generate or fetch random client token, to identify the client
