@@ -3,7 +3,8 @@
 // Handles the main cytoscape graph and data load from the server
 // Provides functions to add, update, and remove resources from the graph
 // ==========================================================================================
-import cytoscape from '../ext/cytoscape/cytoscape.esm.mjs'
+import cytoscape from '../ext/cytoscape.esm.min.mjs'
+import { getConfig } from './config.js'
 import { initEventStreaming } from './events.js'
 import { nodeStyle } from './styles.js'
 
@@ -53,8 +54,10 @@ globalThis.namespaceLoaded = function (ns, data) {
   })
 
   // Debug only
-  console.log('🐞 DEBUG! Received data:')
-  console.dir(data)
+  if (getConfig().debug) {
+    console.log('🐞 DEBUG! Received data:')
+    console.dir(data)
+  }
 
   // Pass 1 - Add ALL the resources to the graph
   for (const kindKey in data) {
@@ -96,9 +99,14 @@ globalThis.reset = function () {
   if (mv) {
     mv.innerHTML = ''
   }
+
+  document.getElementById('error').classList.add('is-hidden')
 }
 
 window.firstLoad = function () {
+  // Makes sure the config defaults are set if they are not already
+  getConfig()
+
   // This is used when the page is loaded with a namespace in the URL
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.has('ns')) {
@@ -112,6 +120,16 @@ window.firstLoad = function () {
       select.dispatchEvent(event)
     }
   }
+}
+
+window.showError = function (event) {
+  console.error('💥 HTMX ERROR')
+  console.dir(event)
+  let errorMessage =
+    event.detail.errorInfo.error + ' ' + event.detail.errorInfo.requestConfig.verb + ' -> ' + event.detail.errorInfo.pathInfo.finalRequestPath
+
+  document.getElementById('errMsg').innerText = errorMessage
+  document.getElementById('error').classList.remove('is-hidden')
 }
 
 //
@@ -159,12 +177,21 @@ export function addEdge(sourceId, targetId) {
 // This function is used to create a node object for Cytoscape from the k8s resource
 //
 function makeNode(res) {
+  let label = res.metadata.name
+
+  // TODO: Make this optional
+  if (getConfig().shortenNames) {
+    if (res.metadata.labels['pod-template-hash']) {
+      label = label.split('-' + res.metadata.labels['pod-template-hash'])[0]
+    }
+  }
+
   return {
     data: {
       resource: true,
       statusColour: statusColour(res),
       id: res.metadata.uid,
-      label: res.metadata.name,
+      label: label,
       icon: res.kind.toLowerCase(),
       kind: res.kind,
     },
@@ -175,46 +202,51 @@ function makeNode(res) {
 // This function is used to calculate the status colour of the resource
 //
 function statusColour(res) {
-  if (res.kind === 'Deployment') {
-    if (res.status == {} || !res.status.conditions) return 'grey'
+  try {
+    if (res.kind === 'Deployment') {
+      if (res.status == {} || !res.status.conditions) return 'grey'
 
-    const availCond = res.status.conditions.find((c) => c.type == 'Available') || null
-    if (availCond && availCond.status == 'True') return 'green'
-    return 'red'
-  }
-
-  if (res.kind === 'ReplicaSet') {
-    if (res.status.replicas == 0) return 'grey'
-    if (res.status.replicas == res.status.readyReplicas) return 'green'
-    return 'red'
-  }
-
-  if (res.kind === 'StatefulSet') {
-    if (res.status.replicas == 0) return 'grey'
-    if (res.status.replicas == res.status.readyReplicas) return 'green'
-    return 'red'
-  }
-
-  if (res.kind === 'DaemonSet') {
-    if (res.status.numberReady == res.status.desiredNumberScheduled) return 'green'
-    if (res.status.desiredNumberScheduled == 0) return 'grey'
-    return 'red'
-  }
-
-  if (res.kind === 'Pod') {
-    // Weird way to check for terminaing pods, it's not anywhere else!
-    if (res.metadata.deletionTimestamp) return 'red'
-
-    if (res.status && res.status.conditions) {
-      const readyCond = res.status.conditions.find((c) => c.type == 'Ready')
-      if (readyCond && readyCond.status == 'True') return 'green'
+      const availCond = res.status.conditions.find((c) => c.type == 'Available') || null
+      if (availCond && availCond.status == 'True') return 'green'
+      return 'red'
     }
 
-    if (res.status.phase == 'Failed') return 'red'
-    if (res.status.phase == 'Succeeded') return 'green'
-    if (res.status.phase == 'Pending') return 'grey'
+    if (res.kind === 'ReplicaSet') {
+      if (res.status.replicas == 0) return 'grey'
+      if (res.status.replicas == res.status.readyReplicas) return 'green'
+      return 'red'
+    }
 
-    return 'grey'
+    if (res.kind === 'StatefulSet') {
+      if (res.status.replicas == 0) return 'grey'
+      if (res.status.replicas == res.status.readyReplicas) return 'green'
+      return 'red'
+    }
+
+    if (res.kind === 'DaemonSet') {
+      if (res.status.numberReady == res.status.desiredNumberScheduled) return 'green'
+      if (res.status.desiredNumberScheduled == 0) return 'grey'
+      return 'red'
+    }
+
+    if (res.kind === 'Pod') {
+      // Weird way to check for terminaing pods, it's not anywhere else!
+      if (res.metadata.deletionTimestamp) return 'red'
+
+      if (res.status && res.status.conditions) {
+        const readyCond = res.status.conditions.find((c) => c.type == 'Ready')
+        if (readyCond && readyCond.status == 'True') return 'green'
+      }
+
+      if (res.status.phase == 'Failed') return 'red'
+      if (res.status.phase == 'Succeeded') return 'green'
+      if (res.status.phase == 'Pending') return 'grey'
+
+      return 'grey'
+    }
+  } catch (e) {
+    console.error('💥 Error calculating status colour:', e)
+    return null
   }
 
   return null
@@ -223,6 +255,7 @@ function statusColour(res) {
 export function activeNamespace() {
   return namespace
 }
+globalThis.activeNamespace = activeNamespace
 
 export function layout() {
   if (!cy) return

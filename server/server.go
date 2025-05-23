@@ -51,7 +51,7 @@ func NewServer(r *chi.Mux) *server {
 
 	ks, err := services.NewKubernetes(sseBroker)
 	if err != nil {
-		log.Fatalf("💩 Unable to connect to Kubernetes. The app will exit")
+		log.Fatalf("💩 Unable to connect to Kubernetes. The KubeView will exit")
 	}
 
 	s := &server{
@@ -68,6 +68,8 @@ func NewServer(r *chi.Mux) *server {
 	r.Get("/", s.index)                        // Serve the index page
 	r.Get("/namespaces", s.fetchNamespaceList) // Return a list of namespaces
 	r.Get("/load", s.loadNamespace)            // Load resources in a namespace and return the data
+	r.Get("/showConfig", s.showConfig)         // Load resources in a namespace and return the data
+	r.Get("/empty", s.empty)                   // Empty response for removing dialogs
 
 	// Special route for SSE streaming events to connected clients
 	r.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +93,13 @@ func NewServer(r *chi.Mux) *server {
 
 func (s *server) index(w http.ResponseWriter, r *http.Request) {
 	err := templates.Index().Render(r.Context(), w)
+	if err != nil {
+		s.return500(w)
+	}
+}
+
+func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
+	err := templates.ConfigDialog().Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}
@@ -136,6 +145,13 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.return500(w)
 	}
+}
+
+func (s *server) empty(w http.ResponseWriter, r *http.Request) {
+	// This is a special route for removing dialogs
+	// It returns an empty response to remove the dialog
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(""))
 }
 
 func (s *server) return500(w http.ResponseWriter) {

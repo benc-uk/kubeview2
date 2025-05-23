@@ -33,13 +33,13 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 
 	// In cluster connect using in-cluster "magic", else build config from .kube/config file
 	if inCluster() {
-		log.Println("🛠️ Running in Kubernetes, will try to use cluster config")
+		log.Println("🛠️ Running in cluster, will try to use cluster config")
 
 		kubeConfig, err = rest.InClusterConfig()
 	} else {
 		var kubeconfigFile = filepath.Join(os.Getenv("HOME"), ".kube", "config")
 
-		log.Println("🏠 Running on some computer, will use config:", kubeconfigFile)
+		log.Println("🏠 Running outside cluster, will use config file:", kubeconfigFile)
 		kubeConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfigFile)
 	}
 

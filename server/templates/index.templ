@@ -5,7 +5,7 @@ templ Index() {
 		<head>
 			@htmlHeader()
 		</head>
-		<body hx-on::error="console.error('Error loading page:', event.detail.xhr.status, event.detail.xhr.statusText)">
+		<body hx-on::error="showError(event)">
 			<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
 				<div class="navbar-brand">
 					<a class="navbar-item" href="/">
@@ -38,6 +38,11 @@ templ Index() {
 										<i class="fas fa-plug"></i>
 									</span>&nbsp;Status
 								</div>
+								<button class="button is-primary" hx-get="showConfig" hx-target="#dialogs" hx-swap="append" hx-trigger="click">
+									<span class="icon">
+										<i class="fas fa-wrench"></i>
+									</span>
+								</button>
 								<a class="button is-light" href="https://github.com/benc-uk/kubeview2" target="_blank">
 									<span class="icon">
 										<i class="fab fa-github"></i>
@@ -48,6 +53,10 @@ templ Index() {
 					</div>
 				</div>
 			</nav>
+			<div id="error" class="notification is-danger mx-5 mt-5 is-hidden">
+				<p class="title is-3">💀 A terrible thing happened!</p>
+				<p id="errMsg"></p>
+			</div>
 			<div id="mainView">
 				<!-- This is the main view where the cytoscape graph is shown -->
 				<!-- content will be swapped in here to replace this notification -->
@@ -62,6 +71,9 @@ templ Index() {
 			<div id="dummy" class="is-hidden">
 				<!-- This is used to trick the HTMX swap nothing is ever shown here -->
 			</div>
+			<div id="dialogs">
+				<!-- Dialogs here -->
+			</div>
 		</body>
 	</html>
 }
@@ -74,6 +86,7 @@ templ htmlHeader() {
 	<link rel="stylesheet" href="public/ext/bulma.min.css"/>
 	<link rel="stylesheet" href="public/css/main.css"/>
 	<script src="public/ext/htmx.min.js"></script>
+	<script src="public/ext/alpinejs.min.js" defer></script>
 	<link
 		rel="stylesheet"
 		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"

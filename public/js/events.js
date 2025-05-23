@@ -3,8 +3,9 @@
 // Handles events from the server and updates the graph accordingly
 // ==========================================================================================
 import { activeNamespace, layout, removeResource, addResource, updateResource, addEdge } from './main.js'
+import { getConfig } from './config.js'
 
-const DEBUG = true
+getConfig().debug
 
 export function initEventStreaming() {
   // Generate or fetch random client token, to identify the client
@@ -27,7 +28,7 @@ export function initEventStreaming() {
 
     if (res.metadata.namespace !== activeNamespace()) return
 
-    if (DEBUG) console.log('⬆️ Add resource:', res.kind, res.metadata.name)
+    if (getConfig().debug) console.log('⬆️ Add resource:', res.kind, res.metadata.name)
 
     addResource(res)
     if (res.metadata.ownerReferences) {
@@ -51,7 +52,7 @@ export function initEventStreaming() {
 
     if (res.metadata.namespace !== activeNamespace()) return
 
-    if (DEBUG) console.log('☠️ Delete resource:', res.kind, res.metadata.name)
+    if (getConfig().debug) console.log('☠️ Delete resource:', res.kind, res.metadata.name)
 
     removeResource(res)
     layout()
@@ -69,7 +70,7 @@ export function initEventStreaming() {
 
     if (res.metadata.namespace !== activeNamespace()) return
 
-    if (DEBUG) console.log('⬆️ Update resource:', res.kind, res.metadata.name)
+    if (getConfig().debug) console.log('⬆️ Update resource:', res.kind, res.metadata.name)
 
     updateResource(res)
   })

@@ -1,0 +1,75 @@
+package templates
+
+templ ConfigDialog() {
+	<div
+		class="modal is-active"
+		id="configDialog"
+		x-data="{
+		cfg: getConfig(),
+		tab: 1,
+		activeNS: activeNamespace(),
+		}"
+	>
+		<div class="modal-background"></div>
+		<div class="modal-card">
+			<header class="modal-card-head has-background-primary py-3">
+				<p class="modal-card-title has-text-black">Settings</p>
+				<button class="delete" aria-label="close" hx-get="empty" hx-target="#dialogs"></button>
+			</header>
+			<div class="modal-content has-background-dark" style="min-height: 300px">
+				<section class="my-2 mx-2">
+					<div class="tabs">
+						<ul>
+							<li :class="{'is-active':tab==1}" @click="tab=1"><a>General</a></li>
+							<li :class="{'is-active':tab==2}" @click="tab=2"><a>Namespaces</a></li>
+							<li :class="{'is-active':tab==3}" @click="tab=3"><a>Filters</a></li>
+						</ul>
+					</div>
+				</section>
+				<section class="mx-5 my-3">
+					<div :class="{'is-hidden':tab!=1}">
+						<div class="field">
+							<label class="checkbox">
+								<input type="checkbox" x-model="cfg.shortenNames"/>
+								Shorten Names
+							</label>
+						</div>
+						<div class="field">
+							<label class="checkbox">
+								<input type="checkbox" x-model="cfg.debug"/>
+								Debug
+							</label>
+						</div>
+					</div>
+					<div :class="{'is-hidden':tab!=2}">
+						<div class="field">
+							<div class="select is-multiple">
+								<select multiple size="4">
+									<option value="Argentina">Argentina</option>
+									<option value="Bolivia">Bolivia</option>
+									<option value="Brazil">Brazil</option>
+									<option value="Chile">Chile</option>
+									<option value="Colombia">Colombia</option>
+									<option value="Ecuador">Ecuador</option>
+									<option value="Guyana">Guyana</option>
+									<option value="Paraguay">Paraguay</option>
+									<option value="Peru">Peru</option>
+									<option value="Suriname">Suriname</option>
+									<option value="Uruguay">Uruguay</option>
+									<option value="Venezuela">Venezuela</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</section>
+			</div>
+			<footer class="modal-card-foot">
+				<div class="buttons" hx-get="load" hx-on::before-send="reset()" hx-include="#nsValue" hx-target="#dummy" hx-indicator="#spinner" hx-trigger="click">
+					<input type="hidden" name="namespace" :value="activeNS" id="nsValue"/>
+					<button class="button is-success" hx-get="empty" hx-target="#dialogs" @click="saveConfig(cfg);">Save changes</button>
+					<button class="button" hx-get="empty" hx-target="#dialogs">Cancel</button>
+				</div>
+			</footer>
+		</div>
+	</div>
+}
