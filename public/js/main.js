@@ -358,7 +358,7 @@ function showPanel(id) {
   if (res.status?.readyReplicas) props.replicasReady = res.status.readyReplicas
   if (res.status?.availableReplicas) props.replicasAvailable = res.status.availableReplicas
   if (res.status?.conditions) {
-    for (const cond of res.status?.conditions) {
+    for (const cond of res.status.conditions || []) {
       if (cond.type === 'Ready') {
         props.ready = cond.status === 'True' ? 'Yes' : 'No'
       }
