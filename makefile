@@ -14,10 +14,14 @@ help: ## 💬 This help message :)
 
 lint: ## 🔍 Lint & format check only, sets exit code on error for CI
 	@figlet $@ || true
+	cd dev/; npm install --silent
+	npx eslint -c dev/eslint.config.mjs public/js
 	go tool -modfile=dev/tools.mod golangci-lint run -c dev/golangci.yaml
 
 lint-fix: ## ✨ Lint & try to format & fix
 	@figlet $@ || true
+	cd dev/; npm install --silent
+	npx eslint -c dev/eslint.config.mjs public/js --fix
 	go tool -modfile=dev/tools.mod golangci-lint run -c dev/golangci.yaml --fix
 
 run: ## 🏃 Run application, used for local development

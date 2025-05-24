@@ -183,6 +183,7 @@ export function addEdge(sourceId, targetId) {
     // This is the syntax Cytoscape uses for creating edges
     // We form a compound ID from the source and target IDs
     cy.add({ data: { id: `${sourceId}.${targetId}`, source: sourceId, target: targetId } })
+    // eslint-disable-next-line
   } catch (e) {
     if (getConfig().debug) {
       console.warn(`🚸 Unable to add link: ${sourceId} to ${targetId}`)
