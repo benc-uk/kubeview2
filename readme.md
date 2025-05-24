@@ -6,6 +6,12 @@ See the [original KubeView project](https://github.com/benc-uk/kubeview) for mor
 
 ## Status
 
+[![CI Lint & Build](https://github.com/benc-uk/kubeview2/actions/workflows/ci.yaml/badge.svg)](https://github.com/benc-uk/kubeview2/actions/workflows/ci.yaml)
+![GitHub license](https://img.shields.io/github/license/benc-uk/kubeview2)
+![GitHub last commit](https://img.shields.io/github/last-commit/benc-uk/kubeview2)
+![GitHub issues](https://img.shields.io/github/issues/benc-uk/kubeview2)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/benc-uk/kubeview2)
+
 ![](./docs/chrome_w7nU3MK4Uq.png)
 
 ### Features / Status
