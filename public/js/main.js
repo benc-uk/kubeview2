@@ -195,7 +195,7 @@ export function updateResource(res) {
 
   node.data(makeNode(res).data)
   resMap[res.metadata.uid] = res
-  if (Alpine.store('res').id === res.metadata.uid) {
+  if (Alpine.store('res').id === res.metadata.uid && Alpine.store('open')) {
     // If the updated resource is the one currently displayed in the panel, update the panel
     showPanel(res.metadata.uid)
   }
