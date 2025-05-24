@@ -27,6 +27,52 @@ form {
   width: 100%;
 }
 
+#infoPanel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin: 20px;
+  z-index: 10;
+}
+
+#infoPanel section {
+  border-radius: 0px 0px 20px 20px;
+  backdrop-filter: blur(20px);
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.property {
+  width: 150px;
+}
+
+.panel-heading img {
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+  margin-left: 0;
+  vertical-align: middle;
+}
+
+.panel-heading span {
+  vertical-align: middle;
+}
+
+.slidein {
+  animation: slidein 0.5s forwards;
+}
+.slideout {
+  animation: slidein 0.5s reverse forwards;
+}
+
+@keyframes slidein {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 .htmx-indicator {
   display: none;
 }

@@ -13,6 +13,7 @@ templ NamespacePicker(nameSpaces []string) {
 }
 
 // This is rendered when the /load endpoint is hit and the namespace is selected
+// It will pass the namespace data to the client side to be rendered in the main view
 templ PassNamespaceData(ns string, data types.NamespaceData) {
 	<div id="mainView" hx-swap-oob="true"></div>
 	// This is almost true magic

@@ -10,20 +10,27 @@ import { nodeStyle } from './styles.js'
 
 let cy = null
 let namespace = null
+let resMap = {}
+
+// Alpine.js store to hold the currently selected resource data
+document.addEventListener('alpine:init', () => {
+  Alpine.store('res', { kind: 'default', id: '', icon: 'default', props: {}, containers: {}, labels: {} })
+})
 
 // Set up the event streaming for live updates once the DOM is loaded
 window.addEventListener('DOMContentLoaded', () => {
+  // Makes sure the config singleton is initialized
+  getConfig()
   initEventStreaming()
 })
 
-//
-// Global function to load the namespace data
-// This function is called from the server side template when the namespace is loaded
-//
+/**
+ * Global function to load the namespace data
+ * This function is called from the server side template when the namespace is loaded
+ */
 globalThis.namespaceLoaded = function (ns, data) {
   console.log(`📚 Data for namespace '${ns}' received`)
   namespace = ns
-
   window.history.replaceState({}, '', `?ns=${ns}`)
 
   // This is why we are here, Cytoscape will be used to render all the data
@@ -43,6 +50,21 @@ globalThis.namespaceLoaded = function (ns, data) {
   cy.style().selector('node:selected').style({
     'border-width': '4',
     'border-color': 'rgb(0, 120, 215)',
+  })
+
+  // Add a click handler to show the info panel
+  cy.on('tap', 'node', function (evt) {
+    const node = evt.target
+    if (node.data('resource')) {
+      showPanel(node.id())
+    }
+  })
+
+  // hide the info panel when clicking outside of a node
+  cy.on('tap', function (evt) {
+    if (evt.target === cy) {
+      hidePanel()
+    }
   })
 
   window.addEventListener('resize', function () {
@@ -83,9 +105,10 @@ globalThis.namespaceLoaded = function (ns, data) {
   layout()
 }
 
-//
-// When the user changes the namespace, we need to reset the graph
-//
+/**
+ * When the user changes the namespace, we need to reset the graph
+ * This is called by HTMX, which is why it's in the global scope
+ */
 globalThis.reset = function () {
   namespace = null
 
@@ -103,10 +126,11 @@ globalThis.reset = function () {
   document.getElementById('error').classList.add('is-hidden')
 }
 
-window.firstLoad = function () {
-  // Makes sure the config defaults are set if they are not already
-  getConfig()
-
+/**
+ * This is called when the page is loaded for the first time
+ * It is called from the server side template, hx-on::after-settle
+ */
+globalThis.firstLoad = function () {
   // This is used when the page is loaded with a namespace in the URL
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.has('ns')) {
@@ -122,6 +146,10 @@ window.firstLoad = function () {
   }
 }
 
+/**
+ * Show an error message in the UI
+ * This is used when HTMX encounters an error, which is why it's in the global scope
+ */
 window.showError = function (event) {
   console.error('💥 HTMX ERROR')
   console.dir(event)
@@ -132,9 +160,9 @@ window.showError = function (event) {
   document.getElementById('error').classList.remove('is-hidden')
 }
 
-//
-// This function is used to add a resource to the graph
-//
+/**
+ * Used to add a resource to the graph
+ */
 export function addResource(res) {
   if (!cy) return
 
@@ -145,12 +173,13 @@ export function addResource(res) {
   }
 
   cy.add(makeNode(res))
+  resMap[res.metadata.uid] = res
 }
 
-//
-// This function is used to update a resource in the graph
-// It will update the node data and the status colour
-//
+/**
+ * Used to update a resource in the graph
+ * It will update the node data and the status colour
+ */
 export function updateResource(res) {
   if (!cy) return
 
@@ -165,19 +194,32 @@ export function updateResource(res) {
   }
 
   node.data(makeNode(res).data)
+  resMap[res.metadata.uid] = res
+  if (Alpine.store('res').id === res.metadata.uid) {
+    // If the updated resource is the one currently displayed in the panel, update the panel
+    showPanel(res.metadata.uid)
+  }
 }
 
-//
-// This function is used to remove a resource from the graph
-//
+/**
+ * Used remove a resource from the graph
+ */
 export function removeResource(res) {
   if (!cy) return
+
   cy.remove('#' + res.metadata.uid)
+
+  delete resMap[res.metadata.uid]
+
+  if (Alpine.store('res').id === res.metadata.uid) {
+    // If the removed resource is the one currently displayed in the panel, hide the panel
+    hidePanel()
+  }
 }
 
-//
-// Link two nodes together
-//
+/**
+ * Link two nodes together
+ */
 export function addEdge(sourceId, targetId) {
   try {
     // This is the syntax Cytoscape uses for creating edges
@@ -191,9 +233,9 @@ export function addEdge(sourceId, targetId) {
   }
 }
 
-//
-// This function is used to create a node object for Cytoscape from the k8s resource
-//
+/**
+ * Create a node object for Cytoscape from the k8s resource
+ */
 function makeNode(res) {
   let label = res.metadata.name
 
@@ -216,9 +258,9 @@ function makeNode(res) {
   }
 }
 
-//
-// This function is used to calculate the status colour of the resource
-//
+/**
+ * Used to calculate the status colour of the resource based on its state
+ */
 function statusColour(res) {
   try {
     if (res.kind === 'Deployment') {
@@ -270,11 +312,17 @@ function statusColour(res) {
   return null
 }
 
+/**
+ * Get the currently active namespace user is viewing
+ */
 export function activeNamespace() {
   return namespace
 }
 globalThis.activeNamespace = activeNamespace
 
+/**
+ * Layout the graph
+ */
 export function layout() {
   if (!cy) return
 
@@ -285,4 +333,79 @@ export function layout() {
     nodeDimensionsIncludeLabels: true,
     spacingFactor: 1,
   }).run()
+}
+
+/**
+ * Show the side info panel for a resource
+ * This will populate the panel with the resource data and show it
+ * @param {string} id - The ID of the resource to show
+ */
+function showPanel(id) {
+  // Find the resource in the resMap
+  const res = resMap[id]
+  if (!res) return
+
+  const props = {
+    name: res.metadata.name,
+    created: res.metadata.creationTimestamp,
+  }
+
+  if (res.status?.podIP) props.podIP = res.status.podIP
+  if (res.status?.hostIP) props.hostIP = res.status.hostIP
+  if (res.status?.phase) props.phase = res.status.phase
+  if (res.spec?.nodeName) props.nodeName = res.spec.nodeName
+  if (res.spec?.replicas) props.replicas = res.spec.replicas
+  if (res.status?.readyReplicas) props.replicasReady = res.status.readyReplicas
+  if (res.status?.availableReplicas) props.replicasAvailable = res.status.availableReplicas
+  if (res.status?.conditions) {
+    for (const cond of res.status?.conditions) {
+      if (cond.type === 'Ready') {
+        props.ready = cond.status === 'True' ? 'Yes' : 'No'
+      }
+      if (cond.type === 'PodScheduled') {
+        props.scheduled = cond.status === 'True' ? 'Yes' : 'No'
+      }
+      if (cond.type === 'Initialized') {
+        props.initialized = cond.status === 'True' ? 'Yes' : 'No'
+      }
+    }
+  }
+
+  // Labels
+  const labels = {}
+  if (res.metadata?.labels) {
+    for (const [key, value] of Object.entries(res.metadata.labels)) {
+      labels[key] = value
+    }
+  }
+
+  const containers = {}
+  if (res.status?.containerStatuses) {
+    for (const c of res.status.containerStatuses) {
+      containers[c.name] = {
+        image: c.image,
+        ready: c.ready ? 'Yes' : 'No',
+        restarts: c.restartCount,
+        started: c.started ? 'Yes' : 'No',
+      }
+    }
+  }
+
+  Alpine.store('res', {
+    kind: res.kind,
+    id: res.metadata.uid,
+    icon: res.kind.toLowerCase(),
+    props,
+    containers,
+    labels,
+  })
+
+  Alpine.store('open', true)
+}
+
+/**
+ * Hide the side info panel
+ */
+function hidePanel() {
+  Alpine.store('open', false)
 }

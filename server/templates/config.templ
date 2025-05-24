@@ -4,11 +4,7 @@ templ ConfigDialog(kubeHost string, ver string) {
 	<div
 		class="modal is-active"
 		id="configDialog"
-		x-data="{
-		cfg: getConfig(),
-		tab: 1,
-		activeNS: activeNamespace(),
-		}"
+		x-data="{ cfg: getConfig(), tab: 1, activeNS: activeNamespace() }"
 	>
 		<div class="modal-background"></div>
 		<div class="modal-card">
