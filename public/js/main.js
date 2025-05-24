@@ -10,11 +10,18 @@ import { nodeStyle } from './styles.js'
 
 let cy = null
 let namespace = null
-let resMap = {}
+const resMap = {}
 
 // Alpine.js store to hold the currently selected resource data
 document.addEventListener('alpine:init', () => {
-  Alpine.store('res', { kind: 'default', id: '', icon: 'default', props: {}, containers: {}, labels: {} })
+  Alpine.store('res', {
+    kind: 'default',
+    id: '',
+    icon: 'default',
+    props: {},
+    containers: {},
+    labels: {},
+  })
 })
 
 // Set up the event streaming for live updates once the DOM is loaded
@@ -153,7 +160,7 @@ globalThis.firstLoad = function () {
 window.showError = function (event) {
   console.error('💥 HTMX ERROR')
   console.dir(event)
-  let errorMessage =
+  const errorMessage =
     event.detail.errorInfo.error + ' ' + event.detail.errorInfo.requestConfig.verb + ' -> ' + event.detail.errorInfo.pathInfo.finalRequestPath
 
   document.getElementById('errMsg').innerText = errorMessage
@@ -224,7 +231,13 @@ export function addEdge(sourceId, targetId) {
   try {
     // This is the syntax Cytoscape uses for creating edges
     // We form a compound ID from the source and target IDs
-    cy.add({ data: { id: `${sourceId}.${targetId}`, source: sourceId, target: targetId } })
+    cy.add({
+      data: {
+        id: `${sourceId}.${targetId}`,
+        source: sourceId,
+        target: targetId,
+      },
+    })
     // eslint-disable-next-line
   } catch (e) {
     if (getConfig().debug) {
