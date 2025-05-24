@@ -21,7 +21,7 @@ func main() {
 	log.Printf("🚀 KubeView %s starting on port %d...\n", version, config.Port)
 
 	// This configures the HTTP server, routing and SSE connection
-	NewServer(r)
+	NewServer(r, config, version)
 
 	//nolint:gosec
 	httpServer := &http.Server{

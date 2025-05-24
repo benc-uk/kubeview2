@@ -24,6 +24,7 @@ import (
 
 type Kubernetes struct {
 	dynamicClient *dynamic.DynamicClient
+	ClusterHost   string
 }
 
 func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) {
@@ -80,6 +81,7 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 
 	return &Kubernetes{
 		dynamicClient: dynamicClient,
+		ClusterHost:   kubeConfig.Host,
 	}, nil
 }
 
@@ -114,6 +116,14 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 	deploymentList, _ := k.getResources(ns, "apps", "v1", "deployments")
 	replicaSetList, _ := k.getResources(ns, "apps", "v1", "replicasets")
 	statefulSetList, _ := k.getResources(ns, "apps", "v1", "statefulsets")
+	daemonSetList, _ := k.getResources(ns, "apps", "v1", "daemonsets")
+	jobList, _ := k.getResources(ns, "batch", "v1", "jobs")
+	cronJobList, _ := k.getResources(ns, "batch", "v1", "cronjobs")
+	ingressList, _ := k.getResources(ns, "networking.k8s.io", "v1", "ingresses")
+	confMapList, _ := k.getResources(ns, "", "v1", "configmaps")
+	secretList, _ := k.getResources(ns, "", "v1", "secrets")
+	// pvList, _ := k.getResources(ns, "", "v1", "persistentvolumes")
+	// pvcList, _ := k.getResources(ns, "", "v1", "persistentvolumeclaims")
 
 	data := make(map[string][]unstructured.Unstructured)
 	data["pods"] = podList
@@ -121,6 +131,14 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 	data["deployments"] = deploymentList
 	data["replicasets"] = replicaSetList
 	data["statefulsets"] = statefulSetList
+	data["daemonsets"] = daemonSetList
+	data["jobs"] = jobList
+	data["cronjobs"] = cronJobList
+	data["ingresses"] = ingressList
+	data["configmaps"] = confMapList
+	data["secrets"] = secretList
+	// data["persistentvolumes"] = pvList
+	// data["persistentvolumeclaims"] = pvcList
 
 	return data, nil
 }

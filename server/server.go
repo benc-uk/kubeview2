@@ -16,9 +16,11 @@ import (
 type server struct {
 	healthy     bool
 	kubeService *services.Kubernetes
+	config      types.Config
+	version     string
 }
 
-func NewServer(r *chi.Mux) *server {
+func NewServer(r *chi.Mux, conf types.Config, ver string) *server {
 	sseBroker := sse.NewBroker[types.KubeEvent]()
 
 	sseBroker.MessageAdapter = func(ke types.KubeEvent, clientID string) sse.SSE {
@@ -57,6 +59,8 @@ func NewServer(r *chi.Mux) *server {
 	s := &server{
 		healthy:     true,
 		kubeService: ks,
+		config:      conf,
+		version:     ver,
 	}
 
 	// Serve the public folder, which contains static files, JS, CSS, images, etc.
@@ -69,7 +73,7 @@ func NewServer(r *chi.Mux) *server {
 	r.Get("/namespaces", s.fetchNamespaceList) // Return a list of namespaces
 	r.Get("/load", s.loadNamespace)            // Load resources in a namespace and return the data
 	r.Get("/showConfig", s.showConfig)         // Load resources in a namespace and return the data
-	r.Get("/empty", s.empty)                   // Empty response for removing dialogs
+	r.Get("/empty", s.empty)                   // Empty response for removing elements on the page
 
 	// Special route for SSE streaming events to connected clients
 	r.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +103,7 @@ func (s *server) index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
-	err := templates.ConfigDialog().Render(r.Context(), w)
+	err := templates.ConfigDialog(s.kubeService.ClusterHost, s.version).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}

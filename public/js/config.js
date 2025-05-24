@@ -19,23 +19,23 @@ export function getConfig() {
 
   // Set the default client ID to a random value
   if (!localStorage.getItem('kubeviewConfig')) {
-    const c = {
+    const cfg = {
       debug: false,
       shortenNames: true,
-      namespaceFilter: [],
-      resKindFilter: ['Pod', 'Deployment', 'ReplicaSet', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob'],
+
+      resFilter: ['Pod', 'Deployment', 'ReplicaSet', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Service', 'Ingress'],
     }
 
-    localStorage.setItem('kubeviewConfig', JSON.stringify(c))
+    localStorage.setItem('kubeviewConfig', JSON.stringify(cfg))
 
-    config = c
-    return config
+    config = cfg
+    return cfg
   }
 
   // Get the config from local storage
-  const c = JSON.parse(localStorage.getItem('kubeviewConfig'))
-  config = c
-  return config
+  const cfg = JSON.parse(localStorage.getItem('kubeviewConfig'))
+  config = cfg
+  return cfg
 }
 
 export function saveConfig(newConfig) {

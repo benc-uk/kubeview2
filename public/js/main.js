@@ -21,7 +21,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // This function is called from the server side template when the namespace is loaded
 //
 globalThis.namespaceLoaded = function (ns, data) {
-  console.log(`📚 Namespace '${ns}' data loaded`)
+  console.log(`📚 Data for namespace '${ns}' received`)
   namespace = ns
 
   window.history.replaceState({}, '', `?ns=${ns}`)
@@ -138,18 +138,33 @@ window.showError = function (event) {
 export function addResource(res) {
   if (!cy) return
 
+  // Hide resources that are not in the filter
+  if (getConfig().resFilter && !getConfig().resFilter.includes(res.kind)) {
+    if (getConfig().debug) console.warn(`🍇 Skipping resource of kind ${res.kind} as it is not in the filter`)
+    return
+  }
+
   cy.add(makeNode(res))
 }
 
+//
+// This function is used to update a resource in the graph
+// It will update the node data and the status colour
+//
 export function updateResource(res) {
   if (!cy) return
 
   const node = cy.getElementById(res.metadata.uid)
-  if (node.length === 0) return
+  if (node.length === 0) {
+    // If the node does not exist, we add it
+    if (getConfig().debug) {
+      console.warn(`🍒 Node with ID ${res.metadata.uid} not found, adding it`)
+    }
+    addResource(res)
+    return
+  }
 
-  const n = makeNode(res)
-
-  node.data(n.data)
+  node.data(makeNode(res).data)
 }
 
 //
@@ -169,7 +184,9 @@ export function addEdge(sourceId, targetId) {
     // We form a compound ID from the source and target IDs
     cy.add({ data: { id: `${sourceId}.${targetId}`, source: sourceId, target: targetId } })
   } catch (e) {
-    console.warn(`### Unable to add link: ${sourceId} to ${targetId}`)
+    if (getConfig().debug) {
+      console.warn(`🚸 Unable to add link: ${sourceId} to ${targetId}`)
+    }
   }
 }
 
@@ -179,8 +196,8 @@ export function addEdge(sourceId, targetId) {
 function makeNode(res) {
   let label = res.metadata.name
 
-  // TODO: Make this optional
-  if (getConfig().shortenNames) {
+  // Shorten the name if configured to do so
+  if (getConfig().shortenNames && res.metadata && res.metadata.labels) {
     if (res.metadata.labels['pod-template-hash']) {
       label = label.split('-' + res.metadata.labels['pod-template-hash'])[0]
     }
