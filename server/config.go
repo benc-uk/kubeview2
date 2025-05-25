@@ -9,7 +9,7 @@ import (
 
 func getConfig() types.Config {
 	port := 8000
-	hideSysNamespaces := true
+	nameSpaceFilter := ""
 	singleNamespace := ""
 
 	if portEnv := os.Getenv("PORT"); portEnv != "" {
@@ -18,19 +18,17 @@ func getConfig() types.Config {
 		}
 	}
 
-	if hideSystemNamespacesEnv := os.Getenv("HIDE_SYSTEM_NAMESPACES"); hideSystemNamespacesEnv != "" {
-		if h, err := strconv.ParseBool(hideSystemNamespacesEnv); err == nil {
-			hideSysNamespaces = h
-		}
-	}
-
 	if s := os.Getenv("SINGLE_NAMESPACE"); s != "" {
 		singleNamespace = s
 	}
 
+	if s := os.Getenv("NAMESPACE_FILTER"); s != "" {
+		nameSpaceFilter = s
+	}
+
 	return types.Config{
-		Port:                 port,
-		HideSystemNamespaces: hideSysNamespaces,
-		SingleNamespace:      singleNamespace,
+		Port:            port,
+		NameSpaceFilter: nameSpaceFilter,
+		SingleNamespace: singleNamespace,
 	}
 }

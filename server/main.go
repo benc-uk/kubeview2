@@ -19,6 +19,7 @@ func main() {
 	config := getConfig()
 
 	log.Printf("🚀 KubeView %s starting on port %d...\n", version, config.Port)
+	log.Printf("🔧 Configuration %+v", config)
 
 	// This configures the HTTP server, routing and SSE connection
 	NewServer(r, config, version)
@@ -27,7 +28,7 @@ func main() {
 	httpServer := &http.Server{
 		Addr:    ":" + strconv.Itoa(config.Port),
 		Handler: r,
-		// Do not set ReadHeaderTimeout it messes with the SSE connection
+		// Do NOT set ReadHeaderTimeout it messes with the SSE connection
 	}
 
 	if err := httpServer.ListenAndServe(); err != nil {

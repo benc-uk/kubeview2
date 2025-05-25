@@ -12,7 +12,7 @@ type KubeEvent struct {
 }
 
 type Config struct {
-	Port                 int
-	HideSystemNamespaces bool
-	SingleNamespace      string
+	Port            int
+	NameSpaceFilter string
+	SingleNamespace string
 }

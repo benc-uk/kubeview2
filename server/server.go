@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/benc-uk/go-rest-api/pkg/sse"
@@ -51,7 +52,7 @@ func NewServer(r *chi.Mux, conf types.Config, ver string) *server {
 		}
 	}()
 
-	ks, err := services.NewKubernetes(sseBroker)
+	ks, err := services.NewKubernetes(sseBroker, conf)
 	if err != nil {
 		log.Fatalf("💩 Unable to connect to Kubernetes. The KubeView will exit")
 	}
@@ -110,11 +111,30 @@ func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
-	nsList, err := s.kubeService.GetNamespaces()
-	if err != nil {
-		s.return500(w)
+	var err error
+	var nsList []string
 
-		return
+	if s.config.SingleNamespace != "" {
+		// If SingleNamespace is set, we only return that namespace
+		nsList = []string{s.config.SingleNamespace}
+	} else {
+		nsList, err = s.kubeService.GetNamespaces()
+		if err != nil {
+			s.return500(w)
+
+			return
+		}
+
+		// Remove namespaces that are in the filter, filter is a regex
+		if s.config.NameSpaceFilter != "" {
+			filteredNamespaces := make([]string, 0, len(nsList))
+			for _, ns := range nsList {
+				if matched, err := regexp.MatchString(s.config.NameSpaceFilter, ns); !matched && err == nil {
+					filteredNamespaces = append(filteredNamespaces, ns)
+				}
+			}
+			nsList = filteredNamespaces
+		}
 	}
 
 	err = templates.NamespacePicker(nsList).Render(r.Context(), w)
@@ -125,6 +145,12 @@ func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	ns := r.URL.Query().Get("namespace")
+
+	if s.config.SingleNamespace != "" && ns != s.config.SingleNamespace {
+		log.Printf("💩 Attempt to load namespace '%s' when only '%s' is allowed", ns, s.config.SingleNamespace)
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
 
 	data, err := s.kubeService.FetchNamespace(ns)
 	if err != nil {

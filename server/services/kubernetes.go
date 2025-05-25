@@ -27,7 +27,7 @@ type Kubernetes struct {
 	ClusterHost   string
 }
 
-func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) {
+func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*Kubernetes, error) {
 	var kubeConfig *rest.Config
 
 	var err error
@@ -56,8 +56,15 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 		return nil, err
 	}
 
+	namespace := coreV1.NamespaceAll // Watch all namespaces
+	if conf.SingleNamespace != "" {
+		namespace = conf.SingleNamespace
+	}
+
+	log.Println("👀 Setting up resource watchers in namespace:", namespace)
+
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
-		dynamicClient, time.Minute, coreV1.NamespaceAll, nil)
+		dynamicClient, time.Minute, namespace, nil)
 
 	// Add listening event handlers for ALL resources we want to track
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}).
