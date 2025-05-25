@@ -118,11 +118,6 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 		return nil, errors.New("namespace is empty")
 	}
 
-	if ns == "temp" {
-		// rerun 500
-		return nil, errors.New("namespace 'temp' is reserved for internal use")
-	}
-
 	podList, _ := k.getResources(ns, "", "v1", "pods")
 	serviceList, _ := k.getResources(ns, "", "v1", "services")
 	endpointList, _ := k.getResources(ns, "", "v1", "endpoints")
@@ -152,10 +147,20 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 	data["secrets"] = secretList
 	data["persistentvolumeclaims"] = pvcList
 
-	// Remove kubernetes managed fields from all objects
+	// Clean up the managed fields and redact sensitive data
 	for _, items := range data {
 		for i := range items {
+			// Managed fields are simply clutter
 			items[i].SetManagedFields(nil)
+
+			// Loop through the data in the data field of Secrets & ConfigMaps and redact it
+			if items[i].GetKind() == "Secret" || items[i].GetKind() == "ConfigMap" {
+				if data, ok := items[i].Object["data"].(map[string]interface{}); ok {
+					for k := range data {
+						data[k] = "*REDACTED*"
+					}
+				}
+			}
 		}
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-var version = "2.0.0"
+var version = "0.0.0"
 
 func main() {
 	r := chi.NewRouter()

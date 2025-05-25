@@ -48,7 +48,7 @@ templ Index() {
 					</div>
 				</div>
 			</nav>
-			<div class="notification is-danger mx-5 mt-5" x-show="$store.error">
+			<div class="notification is-danger mx-5 mt-5" x-show="$store.error" x-cloak>
 				<p class="title is-3">💀 A terrible thing happened!</p>
 				<p x-text="$store.error"></p>
 			</div>
@@ -70,7 +70,7 @@ templ Index() {
 				<!-- Dialogue boxes here -->
 			</div>
 			<!-- This is the info panel that shows resource details -->
-			<article class="panel is-link" id="infoPanel" x-transition:enter="slidein" x-transition:leave="slideout" x-show="$store.open">
+			<article class="panel is-link" id="infoPanel" x-transition:enter="slidein" x-transition:leave="slideout" x-show="$store.open" x-cloak>
 				<p class="panel-heading py-2">
 					<img :src="`public/img/res/${$store.res.icon}.svg`" width="32" height="32" style="vertical-align: middle;"/>
 					<span x-text="$store.res.kind" style="vertical-align: middle;"></span>
