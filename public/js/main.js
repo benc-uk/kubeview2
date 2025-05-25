@@ -17,6 +17,7 @@ export let cy = null
 export const resMap = {}
 
 // Alpine.js stores to hold global state
+// The 'res' store holds the currently selected resource for showing in the side panel
 Alpine.store('res', {
   kind: 'default',
   id: '',
@@ -95,16 +96,16 @@ globalThis.namespaceLoaded = function (ns, data) {
 
   // Pass 1 - Add ALL the resources to the graph
   for (const kindKey in data) {
-    const kind = data[kindKey]
-    for (const res of kind) {
+    const resources = data[kindKey]
+    for (const res of resources || []) {
       addResource(res)
     }
   }
 
   // Pass 2 - Add links between using metadata.ownerReferences
   for (const kindKey in data) {
-    const kind = data[kindKey]
-    for (const res of kind) {
+    const resources = data[kindKey]
+    for (const res of resources || []) {
       processLinks(res)
     }
   }
@@ -178,11 +179,23 @@ export function showPanel(id) {
     created: res.metadata.creationTimestamp,
   }
 
+  if (res.spec?.nodeName) props.nodeName = res.spec.nodeName
+  if (res.spec?.replicas) props.replicas = res.spec.replicas
+  if (res.spec?.type) props.type = res.spec.type
+  if (res.spec?.clusterIP) props.clusterIP = res.spec.clusterIP
+  if (res.spec?.ports) {
+    props.ports = res.spec.ports
+      .map((port) => {
+        return `${port.name} ${port.port}${port.protocol ? `/${port.protocol}` : ''}`
+      })
+      .join(', ')
+  }
+  if (res.spec?.ipFamilies) props.ipVersions = res.spec.ipFamilies.join(', ')
+  if (res.spec?.serviceAccount) props.serviceAccount = res.spec.serviceAccount
+
   if (res.status?.podIP) props.podIP = res.status.podIP
   if (res.status?.hostIP) props.hostIP = res.status.hostIP
   if (res.status?.phase) props.phase = res.status.phase
-  if (res.spec?.nodeName) props.nodeName = res.spec.nodeName
-  if (res.spec?.replicas) props.replicas = res.spec.replicas
   if (res.status?.readyReplicas) props.replicasReady = res.status.readyReplicas
   if (res.status?.availableReplicas) props.replicasAvailable = res.status.availableReplicas
   if (res.status?.conditions) {
@@ -197,6 +210,17 @@ export function showPanel(id) {
         props.initialized = cond.status === 'True' ? 'Yes' : 'No'
       }
     }
+  }
+  if (res.status?.loadBalancer) {
+    if (res.status.loadBalancer.ingress) {
+      props.loadBalancer = res.status.loadBalancer.ingress.map((ingress) => ingress.ip || ingress.hostname).join(', ')
+    }
+  }
+
+  // ConfigMap and Secret data
+  if (res.data) {
+    // just list the keys of the data object
+    props.data = Object.keys(res.data).join(',\n')
   }
 
   // Labels
@@ -215,6 +239,9 @@ export function showPanel(id) {
         ready: c.ready ? 'Yes' : 'No',
         restarts: c.restartCount,
         started: c.started ? 'Yes' : 'No',
+        state: Object.keys(c.state).map((key) => {
+          return `${key}: ${c.state[key].reason || ''}`
+        }),
       }
     }
   }

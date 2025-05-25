@@ -3,8 +3,8 @@
  * @typedef {Object} Config
  * @property {boolean} debug - Enable debug mode
  * @property {boolean} shortenNames - Shorten names in the UI
- * @property {string[]} namespaceFilter - Filter for namespaces
  * @property {string[]} resKindFilter - Filter for resource types
+ * @property {boolean} hideHelm - Hide Helm releases
  */
 
 /** @type {Config}*/
