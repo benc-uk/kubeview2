@@ -2,40 +2,43 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# Configure single namespace mode:
-# - false    - Show resources in all namespaces. This is the default.
-# - true     - Show resources only in namespace Kubeview is installed to.
-# - "string" - Only show resources in the named namespace (can be *different* from the one Kubeview is installed to).
-singleNamespace: false
-
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
+  # -- This sets the image registry and repository, only change this if you've built your own image.
   repository: ghcr.io/benc-uk/kubeview2
-  # This sets the pull policy for images.
+  # -- This sets the pull policy for images
   pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
+  # -- Overrides the image tag 
   tag: 'latest'
 
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+# -- Configure single namespace mode:
+# `false` - Show resources in all namespaces. This is the default.
+# `true` - Show resources only in namespace Kubeview is installed to.
+# "string" - Only show resources in the named namespace (can be *different* from the one Kubeview is installed to).
+singleNamespace: false
+
+# -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# -- This is for the secrets for pulling an image from a private repository
 imagePullSecrets: []
-# This is to override the chart name.
+# -- This is to override the chart name when naming resources
 nameOverride: ''
+# -- This is to fully override the name of the chart & release when naming resources
 fullnameOverride: ''
 
-# This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+# -- For adding custom Kubernetes Annotations to the pods
 podAnnotations: {}
-# This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+# -- For adding custom Kubernetes Labels to the pods
 podLabels: {}
 
+# -- Sets pod security context if you need that sort of thing
 podSecurityContext:
   {}
   # fsGroup: 2000
 
+# -- Sets container security context if you need to run as a specific user or group
 securityContext:
   {}
   # capabilities:
@@ -47,10 +50,8 @@ securityContext:
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  # -- This sets the service type
   type: ClusterIP
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -82,16 +83,6 @@ resources:
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:

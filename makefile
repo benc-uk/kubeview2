@@ -55,7 +55,7 @@ push: check-vars ## 📤 Push container image to registry
 
 helm-docs: ## 📜 Update docs & readme for Helm chart
 	@figlet $@ || true
-	docker run --rm --volume "$(REPO_ROOT)/deploy/helm/kubeview:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
+	docker run --rm --volume "$(REPO_ROOT)/deploy/helm/kubeview:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest --sort-values-order file
 
 helm-package: helm-docs ## 🔠 Package Helm chart and update index
 	@figlet $@ || true

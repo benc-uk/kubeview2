@@ -47,17 +47,16 @@ spec:
           {{ end }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: 8000
               protocol: TCP
-          {{- with .Values.livenessProbe }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.readinessProbe }}
+            httpGet:
+              path: /
+              port: 8000
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.resources }}
+            httpGet:
+              path: /
+              port: 8000
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
