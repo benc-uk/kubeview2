@@ -1,21 +1,23 @@
-# Default values for kubeview2.
+# Default values for KubeView Helm Chart.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# Kubeview specific, if true the app will function in single namespace mode
-# The roles & rolebindings created will be namespaced rather than cluster scoped
-limitNamespace: false
+# Configure single namespace mode:
+# - false    - Show resources in all namespaces. This is the default.
+# - true     - Show resources only in namespace Kubeview is installed to.
+# - "string" - Only show resources in the named namespace (can be *different* from the one Kubeview is installed to).
+singleNamespace: false
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: nginx
+  repository: ghcr.io/benc-uk/kubeview2
   # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ''
+  tag: 'latest'
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
