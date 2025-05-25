@@ -112,6 +112,7 @@ func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 	var err error
+
 	var nsList []string
 
 	if s.config.SingleNamespace != "" {
@@ -128,11 +129,13 @@ func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 		// Remove namespaces that are in the filter, filter is a regex
 		if s.config.NameSpaceFilter != "" {
 			filteredNamespaces := make([]string, 0, len(nsList))
+
 			for _, ns := range nsList {
 				if matched, err := regexp.MatchString(s.config.NameSpaceFilter, ns); !matched && err == nil {
 					filteredNamespaces = append(filteredNamespaces, ns)
 				}
 			}
+
 			nsList = filteredNamespaces
 		}
 	}
@@ -149,6 +152,7 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	if s.config.SingleNamespace != "" && ns != s.config.SingleNamespace {
 		log.Printf("💩 Attempt to load namespace '%s' when only '%s' is allowed", ns, s.config.SingleNamespace)
 		http.Error(w, "Forbidden", http.StatusForbidden)
+
 		return
 	}
 
