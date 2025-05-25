@@ -78,7 +78,8 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
-	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}).
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "networking.k8s.io",
+		Version: "v1", Resource: "ingresses"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 
