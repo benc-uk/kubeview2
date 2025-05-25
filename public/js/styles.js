@@ -15,4 +15,7 @@ export const nodeStyle = {
   'text-outline-color': '#111',
   'text-outline-width': 4,
   'background-image': 'public/img/res/default.svg',
+  // display: function (ele) {
+  //   return ele.data('kind') !== 'Endpoints' ? 'element' : 'none'
+  // },
 }

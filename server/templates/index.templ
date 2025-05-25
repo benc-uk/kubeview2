@@ -48,9 +48,9 @@ templ Index() {
 					</div>
 				</div>
 			</nav>
-			<div id="error" class="notification is-danger mx-5 mt-5 is-hidden">
+			<div class="notification is-danger mx-5 mt-5" x-show="$store.error">
 				<p class="title is-3">💀 A terrible thing happened!</p>
-				<p id="errMsg"></p>
+				<p x-text="$store.error"></p>
 			</div>
 			<div id="mainView">
 				<!-- This is the main view where the cytoscape graph is shown -->
@@ -69,7 +69,7 @@ templ Index() {
 			<div id="dialogs">
 				<!-- Dialogue boxes here -->
 			</div>
-			<!-- This is the info panel that shows resource details x-transition.scale.40.duration.200ms -->
+			<!-- This is the info panel that shows resource details -->
 			<article class="panel is-link" id="infoPanel" x-transition:enter="slidein" x-transition:leave="slideout" x-show="$store.open">
 				<p class="panel-heading py-2">
 					<img :src="`public/img/res/${$store.res.icon}.svg`" width="32" height="32" style="vertical-align: middle;"/>
@@ -128,7 +128,6 @@ templ htmlHeader() {
 		rel="stylesheet"
 		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
 	/>
-	<!-- These are our main application scripts & entry point-->
+	<!-- Main app script and entry point -->
 	<script src="public/js/main.js" type="module"></script>
-	<script src="public/ext/alpinejs.min.js" defer></script>
 }

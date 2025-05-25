@@ -66,6 +66,9 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}).
+		Informer().
+		AddEventHandler(getHandlerFuncs(sseBroker))
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
@@ -73,6 +76,9 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent]) (*Kubernetes, error) 
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"}).
+		Informer().
+		AddEventHandler(getHandlerFuncs(sseBroker))
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 
@@ -111,8 +117,14 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 		return nil, errors.New("namespace is empty")
 	}
 
+	if ns == "temp" {
+		// rerun 500
+		return nil, errors.New("namespace 'temp' is reserved for internal use")
+	}
+
 	podList, _ := k.getResources(ns, "", "v1", "pods")
 	serviceList, _ := k.getResources(ns, "", "v1", "services")
+	endpointList, _ := k.getResources(ns, "", "v1", "endpoints")
 	deploymentList, _ := k.getResources(ns, "apps", "v1", "deployments")
 	replicaSetList, _ := k.getResources(ns, "apps", "v1", "replicasets")
 	statefulSetList, _ := k.getResources(ns, "apps", "v1", "statefulsets")
@@ -122,11 +134,11 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 	ingressList, _ := k.getResources(ns, "networking.k8s.io", "v1", "ingresses")
 	confMapList, _ := k.getResources(ns, "", "v1", "configmaps")
 	secretList, _ := k.getResources(ns, "", "v1", "secrets")
-	// pvList, _ := k.getResources(ns, "", "v1", "persistentvolumes")
-	// pvcList, _ := k.getResources(ns, "", "v1", "persistentvolumeclaims")
+	pvcList, _ := k.getResources(ns, "", "v1", "persistentvolumeclaims")
 
 	data := make(map[string][]unstructured.Unstructured)
 	data["pods"] = podList
+	data["endpoints"] = endpointList
 	data["services"] = serviceList
 	data["deployments"] = deploymentList
 	data["replicasets"] = replicaSetList
@@ -137,8 +149,14 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 	data["ingresses"] = ingressList
 	data["configmaps"] = confMapList
 	data["secrets"] = secretList
-	// data["persistentvolumes"] = pvList
-	// data["persistentvolumeclaims"] = pvcList
+	data["persistentvolumeclaims"] = pvcList
+
+	// Remove kubernetes managed fields from all objects
+	for _, items := range data {
+		for i := range items {
+			items[i].SetManagedFields(nil)
+		}
+	}
 
 	return data, nil
 }

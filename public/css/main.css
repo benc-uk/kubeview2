@@ -21,7 +21,7 @@ form {
   display: flex;
   position: fixed;
   top: 100px;
-  z-index: 1000;
+  z-index: 2;
   justify-content: center;
   margin-top: 4vh;
   width: 100%;
@@ -71,6 +71,10 @@ form {
   to {
     transform: translateX(0);
   }
+}
+
+[x-cloak] {
+  display: none !important;
 }
 
 .htmx-indicator {

@@ -13,7 +13,6 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.browser,
-        Alpine: 'readonly',
       },
     },
     rules: {

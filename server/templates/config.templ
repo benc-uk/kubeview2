@@ -3,8 +3,7 @@ package templates
 templ ConfigDialog(kubeHost string, ver string) {
 	<div
 		class="modal is-active"
-		id="configDialog"
-		x-data="{ cfg: getConfig(), tab: 1, activeNS: activeNamespace() }"
+		x-data="{ cfg: getConfig(), tab: 1 }"
 	>
 		<div class="modal-background"></div>
 		<div class="modal-card">
@@ -85,11 +84,7 @@ templ ConfigDialog(kubeHost string, ver string) {
 			</div>
 			<footer class="modal-card-foot">
 				<div class="buttons">
-					<!-- Note TWO htmx calls happen when save is clicked: /load and /empty -->
-					<div hx-get="load" hx-on::before-send="reset()" hx-include="#nsValue" hx-target="#dummy" hx-indicator="#spinner" hx-trigger="click">
-						<input type="hidden" name="namespace" :value="activeNS" id="nsValue"/>
-						<button class="button is-success" hx-get="empty" hx-target="#dialogs" @click="saveConfig(cfg);">Save changes</button>
-					</div>
+					<button class="button is-success" :hx-get="`load?namespace=${$store.namespace}`" hx-on::before-send="reset()" hx-target="#dummy" hx-indicator="#spinner" hx-trigger="click" @click="saveConfig(cfg);">Save changes</button>
 					<button class="button" hx-get="empty" hx-target="#dialogs">Cancel</button>
 				</div>
 			</footer>

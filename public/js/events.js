@@ -2,10 +2,9 @@
 // Event streaming for Kubernetes resources
 // Handles events from the server and updates the graph accordingly
 // ==========================================================================================
-import { activeNamespace, layout, removeResource, addResource, updateResource, addEdge } from './main.js'
+import { layout, removeResource, addResource, updateResource } from './graph.js'
 import { getConfig } from './config.js'
-
-getConfig().debug
+import Alpine from '../ext/alpinejs.esm.min.js'
 
 export function initEventStreaming() {
   // Generate or fetch random client token, to identify the client
@@ -26,17 +25,11 @@ export function initEventStreaming() {
       return
     }
 
-    if (res.metadata.namespace !== activeNamespace()) return
+    if (res.metadata.namespace !== Alpine.store('namespace')) return
 
     if (getConfig().debug) console.log('⬆️ Add resource:', res.kind, res.metadata.name)
 
     addResource(res)
-    if (res.metadata.ownerReferences) {
-      for (const ownerRef of res.metadata.ownerReferences) {
-        addEdge(ownerRef.uid, res.metadata.uid)
-      }
-    }
-
     layout()
   })
 
@@ -50,7 +43,7 @@ export function initEventStreaming() {
       return
     }
 
-    if (res.metadata.namespace !== activeNamespace()) return
+    if (res.metadata.namespace !== Alpine.store('namespace')) return
 
     if (getConfig().debug) console.log('☠️ Delete resource:', res.kind, res.metadata.name)
 
@@ -68,7 +61,7 @@ export function initEventStreaming() {
       return
     }
 
-    if (res.metadata.namespace !== activeNamespace()) return
+    if (res.metadata.namespace !== Alpine.store('namespace')) return
 
     if (getConfig().debug) console.log('⬆️ Update resource:', res.kind, res.metadata.name)
 

@@ -4,30 +4,35 @@
 // Provides functions to add, update, and remove resources from the graph
 // ==========================================================================================
 import cytoscape from '../ext/cytoscape.esm.min.mjs'
+import Alpine from '../ext/alpinejs.esm.min.js'
+
 import { getConfig } from './config.js'
 import { initEventStreaming } from './events.js'
 import { nodeStyle } from './styles.js'
+import { addResource, processLinks, layout } from './graph.js'
 
-let cy = null
-let namespace = null
-const resMap = {}
+// These are shared variables used across the application
+// `cy` is the Cytoscape instance, `resMap` is a map of resources by their UID
+export let cy = null
+export const resMap = {}
 
-// Alpine.js store to hold the currently selected resource data
-document.addEventListener('alpine:init', () => {
-  Alpine.store('res', {
-    kind: 'default',
-    id: '',
-    icon: 'default',
-    props: {},
-    containers: {},
-    labels: {},
-  })
+// Alpine.js stores to hold global state
+Alpine.store('res', {
+  kind: 'default',
+  id: '',
+  icon: 'default',
+  props: {},
+  containers: {},
+  labels: {},
 })
+Alpine.store('open', false)
+Alpine.store('namespace', '')
+
+// Initialize & start Alpine.js
+Alpine.start()
 
 // Set up the event streaming for live updates once the DOM is loaded
 window.addEventListener('DOMContentLoaded', () => {
-  // Makes sure the config singleton is initialized
-  getConfig()
   initEventStreaming()
 })
 
@@ -37,7 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
  */
 globalThis.namespaceLoaded = function (ns, data) {
   console.log(`📚 Data for namespace '${ns}' received`)
-  namespace = ns
+  Alpine.store('namespace', ns)
   window.history.replaceState({}, '', `?ns=${ns}`)
 
   // This is why we are here, Cytoscape will be used to render all the data
@@ -92,7 +97,6 @@ globalThis.namespaceLoaded = function (ns, data) {
   for (const kindKey in data) {
     const kind = data[kindKey]
     for (const res of kind) {
-      // Add the resource to the graph
       addResource(res)
     }
   }
@@ -101,11 +105,7 @@ globalThis.namespaceLoaded = function (ns, data) {
   for (const kindKey in data) {
     const kind = data[kindKey]
     for (const res of kind) {
-      if (res.metadata.ownerReferences) {
-        for (const ownerRef of res.metadata.ownerReferences) {
-          addEdge(ownerRef.uid, res.metadata.uid)
-        }
-      }
+      processLinks(res)
     }
   }
 
@@ -117,20 +117,18 @@ globalThis.namespaceLoaded = function (ns, data) {
  * This is called by HTMX, which is why it's in the global scope
  */
 globalThis.reset = function () {
-  namespace = null
-
   console.log('🔄 Resetting namespace')
+
+  Alpine.store('open', false)
+  Alpine.store('namespace', '')
+  Alpine.store('error', '')
+
   if (cy !== null) {
     cy.destroy()
     cy = null
   }
 
-  const mv = document.getElementById('mainView')
-  if (mv) {
-    mv.innerHTML = ''
-  }
-
-  document.getElementById('error').classList.add('is-hidden')
+  document.getElementById('mainView').innerHTML = ''
 }
 
 /**
@@ -142,7 +140,7 @@ globalThis.firstLoad = function () {
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.has('ns')) {
     const urlNamespace = urlParams.get('ns')
-    namespace = urlNamespace
+    Alpine.store('namespace', urlNamespace)
 
     if (urlNamespace) {
       const event = new Event('change')
@@ -158,194 +156,11 @@ globalThis.firstLoad = function () {
  * This is used when HTMX encounters an error, which is why it's in the global scope
  */
 window.showError = function (event) {
-  console.error('💥 HTMX ERROR')
-  console.dir(event)
-  const errorMessage =
-    event.detail.errorInfo.error + ' ' + event.detail.errorInfo.requestConfig.verb + ' -> ' + event.detail.errorInfo.pathInfo.finalRequestPath
+  console.log('💥 Error from HTMX:', event.detail.errorInfo)
+  const info = event.detail.errorInfo
+  const errorMessage = `${info.error}, METHOD: ${info.requestConfig.verb}, PATH:${info.pathInfo.finalRequestPath}`
 
-  document.getElementById('errMsg').innerText = errorMessage
-  document.getElementById('error').classList.remove('is-hidden')
-}
-
-/**
- * Used to add a resource to the graph
- */
-export function addResource(res) {
-  if (!cy) return
-
-  // Hide resources that are not in the filter
-  if (getConfig().resFilter && !getConfig().resFilter.includes(res.kind)) {
-    if (getConfig().debug) console.warn(`🍇 Skipping resource of kind ${res.kind} as it is not in the filter`)
-    return
-  }
-
-  cy.add(makeNode(res))
-  resMap[res.metadata.uid] = res
-}
-
-/**
- * Used to update a resource in the graph
- * It will update the node data and the status colour
- */
-export function updateResource(res) {
-  if (!cy) return
-
-  const node = cy.getElementById(res.metadata.uid)
-  if (node.length === 0) {
-    // If the node does not exist, we add it
-    if (getConfig().debug) {
-      console.warn(`🍒 Node with ID ${res.metadata.uid} not found, adding it`)
-    }
-    addResource(res)
-    return
-  }
-
-  node.data(makeNode(res).data)
-  resMap[res.metadata.uid] = res
-  if (Alpine.store('res').id === res.metadata.uid && Alpine.store('open')) {
-    // If the updated resource is the one currently displayed in the panel, update the panel
-    showPanel(res.metadata.uid)
-  }
-}
-
-/**
- * Used remove a resource from the graph
- */
-export function removeResource(res) {
-  if (!cy) return
-
-  cy.remove('#' + res.metadata.uid)
-
-  delete resMap[res.metadata.uid]
-
-  if (Alpine.store('res').id === res.metadata.uid) {
-    // If the removed resource is the one currently displayed in the panel, hide the panel
-    hidePanel()
-  }
-}
-
-/**
- * Link two nodes together
- */
-export function addEdge(sourceId, targetId) {
-  try {
-    // This is the syntax Cytoscape uses for creating edges
-    // We form a compound ID from the source and target IDs
-    cy.add({
-      data: {
-        id: `${sourceId}.${targetId}`,
-        source: sourceId,
-        target: targetId,
-      },
-    })
-    // eslint-disable-next-line
-  } catch (e) {
-    if (getConfig().debug) {
-      console.warn(`🚸 Unable to add link: ${sourceId} to ${targetId}`)
-    }
-  }
-}
-
-/**
- * Create a node object for Cytoscape from the k8s resource
- */
-function makeNode(res) {
-  let label = res.metadata.name
-
-  // Shorten the name if configured to do so
-  if (getConfig().shortenNames && res.metadata && res.metadata.labels) {
-    if (res.metadata.labels['pod-template-hash']) {
-      label = label.split('-' + res.metadata.labels['pod-template-hash'])[0]
-    }
-  }
-
-  return {
-    data: {
-      resource: true,
-      statusColour: statusColour(res),
-      id: res.metadata.uid,
-      label: label,
-      icon: res.kind.toLowerCase(),
-      kind: res.kind,
-    },
-  }
-}
-
-/**
- * Used to calculate the status colour of the resource based on its state
- */
-function statusColour(res) {
-  try {
-    if (res.kind === 'Deployment') {
-      if (res.status == {} || !res.status.conditions) return 'grey'
-
-      const availCond = res.status.conditions.find((c) => c.type == 'Available') || null
-      if (availCond && availCond.status == 'True') return 'green'
-      return 'red'
-    }
-
-    if (res.kind === 'ReplicaSet') {
-      if (res.status.replicas == 0) return 'grey'
-      if (res.status.replicas == res.status.readyReplicas) return 'green'
-      return 'red'
-    }
-
-    if (res.kind === 'StatefulSet') {
-      if (res.status.replicas == 0) return 'grey'
-      if (res.status.replicas == res.status.readyReplicas) return 'green'
-      return 'red'
-    }
-
-    if (res.kind === 'DaemonSet') {
-      if (res.status.numberReady == res.status.desiredNumberScheduled) return 'green'
-      if (res.status.desiredNumberScheduled == 0) return 'grey'
-      return 'red'
-    }
-
-    if (res.kind === 'Pod') {
-      // Weird way to check for terminaing pods, it's not anywhere else!
-      if (res.metadata.deletionTimestamp) return 'red'
-
-      if (res.status && res.status.conditions) {
-        const readyCond = res.status.conditions.find((c) => c.type == 'Ready')
-        if (readyCond && readyCond.status == 'True') return 'green'
-      }
-
-      if (res.status.phase == 'Failed') return 'red'
-      if (res.status.phase == 'Succeeded') return 'green'
-      if (res.status.phase == 'Pending') return 'grey'
-
-      return 'grey'
-    }
-  } catch (e) {
-    console.error('💥 Error calculating status colour:', e)
-    return null
-  }
-
-  return null
-}
-
-/**
- * Get the currently active namespace user is viewing
- */
-export function activeNamespace() {
-  return namespace
-}
-globalThis.activeNamespace = activeNamespace
-
-/**
- * Layout the graph
- */
-export function layout() {
-  if (!cy) return
-
-  // Use breadthfirst with Deployments or DaemonSets or StatefulSets at the root
-  cy.layout({
-    name: 'breadthfirst',
-    roots: cy.nodes('[kind = "Deployment"],[kind = "DaemonSet"],[kind = "StatefulSet"]'),
-    nodeDimensionsIncludeLabels: true,
-    spacingFactor: 1,
-  }).run()
+  Alpine.store('error', errorMessage)
 }
 
 /**
@@ -353,7 +168,7 @@ export function layout() {
  * This will populate the panel with the resource data and show it
  * @param {string} id - The ID of the resource to show
  */
-function showPanel(id) {
+export function showPanel(id) {
   // Find the resource in the resMap
   const res = resMap[id]
   if (!res) return
@@ -419,6 +234,6 @@ function showPanel(id) {
 /**
  * Hide the side info panel
  */
-function hidePanel() {
+export function hidePanel() {
   Alpine.store('open', false)
 }
