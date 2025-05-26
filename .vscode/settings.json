@@ -3,8 +3,8 @@
     "editor.defaultFormatter": "a-h.templ",
     "editor.formatOnSave": true
   },
-  "prettier.configPath": "dev/.prettierrc",
+  "prettier.configPath": ".dev/.prettierrc",
   "eslint.options": {
-    "overrideConfigFile": "dev/eslint.config.mjs"
+    "overrideConfigFile": ".dev/eslint.config.mjs"
   }
 }
