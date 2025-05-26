@@ -1,16 +1,6 @@
-# Default values for KubeView Helm Chart.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
-image:
-  # -- This sets the image registry and repository, only change this if you've built your own image.
-  repository: ghcr.io/benc-uk/kubeview2
-  # -- This sets the pull policy for images
-  pullPolicy: Always
-  # -- Overrides the image tag 
-  tag: 'latest'
+# ================================================================
+# Default values for KubeView Helm Chart
+# ================================================================
 
 # -- Configure single namespace mode:
 # `false` - Show resources in all namespaces. This is the default.
@@ -18,8 +8,24 @@ image:
 # "string" - Only show resources in the named namespace (can be *different* from the one Kubeview is installed to).
 singleNamespace: false
 
-# -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+ingress:
+  # -- Expose the app via an Ingress
+  enabled: false
+  # -- Extra Ingress annotations
+  annotations: {}
+  # -- The domain name to use for the Ingress
+  hosts:
+    - host: chart-example.local
+  # -- Use this to reference a TLS secret to enable HTTPS
+  tls: []
+  # -- The Ingress class to use, if you have multiple ingress controllers
+  className: ""
+
+loadBalancer:
+  # -- Set to true to enable the LoadBalancer service type
+  enabled: true
+  # -- Optionally set the LoadBalancer IP address if you want to use a static IP
+  IP: ""  
 
 # -- This is for the secrets for pulling an image from a private repository
 imagePullSecrets: []
@@ -27,6 +33,14 @@ imagePullSecrets: []
 nameOverride: ''
 # -- This is to fully override the name of the chart & release when naming resources
 fullnameOverride: ''
+
+image:
+  # -- Only change this if you've built & pushed your own image to a registry
+  repository: ghcr.io/benc-uk/kubeview2
+  # -- This sets the pull policy for images
+  pullPolicy: Always
+  # -- Specify the image tag to use. If you want to use a specific version, set it here.
+  tag: 'latest'
 
 # -- For adding custom Kubernetes Annotations to the pods
 podAnnotations: {}
@@ -36,77 +50,28 @@ podLabels: {}
 # -- Sets pod security context if you need that sort of thing
 podSecurityContext:
   {}
-  # fsGroup: 2000
 
 # -- Sets container security context if you need to run as a specific user or group
 securityContext:
   {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
 
-# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
-service:
-  # -- This sets the service type
-  type: ClusterIP
+# -- Run multiple instances of the Kubeview pod
+replicaCount: 1
 
-# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-  className: ''
-  annotations:
-    {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
+# -- This is for changing the resource limits and requests for the Kubeview pods
 resources:
-  {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+  limits:
+    cpu: 50m
+    memory: 64Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
 
-# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
-
+# -- If you want to schedule the pods to specific nodes, you can set node selectors here
 nodeSelector: {}
 
+# -- If you want to set specific tolerations for the pods, you can set them here
 tolerations: []
 
+# -- If you want to set specific affinity rules for the pods, you can set them here
 affinity: {}

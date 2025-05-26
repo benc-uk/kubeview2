@@ -1,12 +1,12 @@
 -include .dev/.env
 export
 
-REPO_ROOT := $(shell git rev-parse --show-toplevel)
 SHELL := /bin/bash
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
 VERSION ?= $(shell git tag -l --sort=-creatordate | head -n 1)
 
 .EXPORT_ALL_VARIABLES:
-.PHONY: help lint lint-fix run build generate clean image push check-vars
+.PHONY: help lint lint-fix run build generate clean image push check-vars helm-docs helm-package
 .DEFAULT_GOAL := help
 
 help: ## 💬 This help message :)
