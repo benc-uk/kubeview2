@@ -5,7 +5,7 @@ templ Index() {
 		<head>
 			@htmlHeader()
 		</head>
-		<body hx-on::error="showError(event)" x-data="{ labelsShown: false }">
+		<body hx-on::error="showError(event)" x-data="mainApp">
 			<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
 				<div class="navbar-brand">
 					<a class="navbar-item" href="/">
@@ -28,6 +28,17 @@ templ Index() {
 									</button>
 								</div>
 							</form>
+							<div class="navbar-item">
+								<button class="button is-primary" onclick="coseLayout()">
+									<span class="icon"><i class="fas fa-circle-nodes"></i></span>
+								</button>
+								<button class="button is-primary" onclick="coseLayout()">
+									<span class="icon"><i class="fas fa-expand"></i></span>
+								</button>
+							</div>
+							<div id="spinner">
+								<img src="public/img/spinner.svg" alt="Loading..." width="40" height="40" class="htmx-indicator"/>
+							</div>
 						</div>
 					</div>
 					<div class="navbar-end">
@@ -52,22 +63,19 @@ templ Index() {
 				<p class="title is-3">💀 A terrible thing happened!</p>
 				<p x-text="$store.error"></p>
 			</div>
+			<!-- content will be swapped in here to replace this notification -->
+			<div class="notification is-success mx-5 mt-5" id="welcome">
+				<p class="title is-3">Welcome to KubeView</p>
+				<p>Choose a namespace from the dropdown to view resources</p>
+			</div>
 			<div id="mainView">
 				<!-- This is the main view where the cytoscape graph is shown -->
-				<!-- content will be swapped in here to replace this notification -->
-				<div class="notification is-success mx-5 mt-5">
-					<p class="title is-3">Welcome to KubeView</p>
-					<p>Choose a namespace from the dropdown to view resources</p>
-				</div>
-			</div>
-			<div id="spinner">
-				<img src="public/img/spinner-grid.svg" alt="Loading..." class="htmx-indicator"/>
 			</div>
 			<div id="dummy" class="is-hidden">
 				<!-- This is used to trick the HTMX swap nothing is ever shown here -->
 			</div>
 			<div id="dialogs">
-				<!-- Dialogue boxes here -->
+				<!-- Dialog boxes here -->
 			</div>
 			<!-- This is the info panel that shows resource details -->
 			<article class="panel is-link" id="infoPanel" x-transition:enter="slidein" x-transition:leave="slideout" x-show="$store.open" x-cloak>

@@ -52,7 +52,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<select hx-get=\"load\" hx-on::before-send=\"reset()\" name=\"namespace\" hx-target=\"#dummy\" hx-indicator=\"#spinner\"><option disabled selected>Choose a namespace</option> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<select hx-get=\"load\" name=\"namespace\" hx-target=\"#dummy\" hx-indicator=\"#spinner\"><option disabled selected>Choose a namespace</option> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -120,7 +120,7 @@ func PassNamespaceData(ns string, data types.NamespaceData) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div id=\"mainView\" hx-swap-oob=\"true\"></div><div id=\"dialogs\" hx-swap-oob=\"true\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div id=\"welcome\" hx-swap-oob=\"true\" class=\"is-hidden\"></div><div id=\"dialogs\" hx-swap-oob=\"true\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

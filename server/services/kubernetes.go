@@ -23,8 +23,8 @@ import (
 )
 
 type Kubernetes struct {
-	dynamicClient *dynamic.DynamicClient
-	ClusterHost   string
+	client      *dynamic.DynamicClient
+	ClusterHost string
 }
 
 func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*Kubernetes, error) {
@@ -38,7 +38,10 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 
 		kubeConfig, err = rest.InClusterConfig()
 	} else {
-		var kubeconfigFile = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+		kubeconfigFile := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+		if os.Getenv("KUBECONFIG") != "" {
+			kubeconfigFile = os.Getenv("KUBECONFIG")
+		}
 
 		log.Println("🏠 Running outside cluster, will use config file:", kubeconfigFile)
 		kubeConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfigFile)
@@ -49,19 +52,32 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 		return nil, err
 	}
 
-	log.Println("⚡ Connected to Kubernetes:", kubeConfig.Host)
+	log.Println("🌐 Kubernetes host:", kubeConfig.Host)
 
+	// Use the dynamic client to interact with the Kubernetes API
+	// This allows us to work with any resource type without needing to know the schema in advance
 	dynamicClient, err := dynamic.NewForConfig(kubeConfig)
 	if err != nil {
 		return nil, err
 	}
 
+	// Check connection to the cluster
+	_, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "namespaces"}).
+		List(context.TODO(), metaV1.ListOptions{})
+	if err != nil {
+		log.Println("💥 Failed retrieve data from Kubernetes API:", err)
+		return nil, err
+	} else {
+		log.Println("✅ Validated connection to Kubernetes API")
+	}
+
+	log.Println("👀 Setting up resource watchers...")
+
 	namespace := coreV1.NamespaceAll // Watch all namespaces
 	if conf.SingleNamespace != "" {
 		namespace = conf.SingleNamespace
+		log.Println("👀 Watching single namespace:", namespace)
 	}
-
-	log.Println("👀 Setting up resource watchers in namespace:", namespace)
 
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
 		dynamicClient, time.Minute, namespace, nil)
@@ -70,21 +86,27 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
+
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
+
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
+
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
+
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "replicasets"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
+
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
+
 	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "networking.k8s.io",
 		Version: "v1", Resource: "ingresses"}).
 		Informer().
@@ -94,8 +116,8 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 	factory.WaitForCacheSync(context.Background().Done())
 
 	return &Kubernetes{
-		dynamicClient: dynamicClient,
-		ClusterHost:   kubeConfig.Host,
+		client:      dynamicClient,
+		ClusterHost: kubeConfig.Host,
 	}, nil
 }
 
@@ -106,7 +128,7 @@ func (k *Kubernetes) GetNamespaces() ([]string, error) {
 	// Use the dynamicClient to get the list of namespaces
 	gvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "namespaces"}
 
-	l, err := k.dynamicClient.Resource(gvr).List(context.TODO(), metaV1.ListOptions{})
+	l, err := k.client.Resource(gvr).List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
 		log.Println("💥 Failed to get namespaces:", err)
 		return nil, err
@@ -160,7 +182,7 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 			// Managed fields are simply clutter
 			items[i].SetManagedFields(nil)
 
-			// Loop through the data in the data field of Secrets & ConfigMaps and redact it
+			// Loop through the data field of Secrets & ConfigMaps and redact it
 			if items[i].GetKind() == "Secret" || items[i].GetKind() == "ConfigMap" {
 				if data, ok := items[i].Object["data"].(map[string]interface{}); ok {
 					for k := range data {
@@ -178,7 +200,7 @@ func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstru
 func (k *Kubernetes) getResources(ns string, grp string, ver string, res string) ([]unstructured.Unstructured, error) {
 	gvr := schema.GroupVersionResource{Group: grp, Version: ver, Resource: res}
 
-	l, err := k.dynamicClient.Resource(gvr).Namespace(ns).List(context.TODO(), metaV1.ListOptions{})
+	l, err := k.client.Resource(gvr).Namespace(ns).List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
 		log.Printf("💥 Failed to get %s %v", res, err)
 		return nil, err

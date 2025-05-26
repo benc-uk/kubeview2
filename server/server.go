@@ -75,6 +75,7 @@ func NewServer(r *chi.Mux, conf types.Config, ver string) *server {
 	r.Get("/load", s.loadNamespace)            // Load resources in a namespace and return the data
 	r.Get("/showConfig", s.showConfig)         // Load resources in a namespace and return the data
 	r.Get("/empty", s.empty)                   // Empty response for removing elements on the page
+	r.Get("/health", s.healthCheck)
 
 	// Special route for SSE streaming events to connected clients
 	r.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +112,7 @@ func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
+	log.Println("🔍 Fetching list of namespaces")
 	var err error
 
 	var nsList []string
@@ -148,6 +150,7 @@ func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	ns := r.URL.Query().Get("namespace")
+	log.Println("🍵 Fetching resources in", ns)
 
 	if s.config.SingleNamespace != "" && ns != s.config.SingleNamespace {
 		log.Printf("💩 Attempt to load namespace '%s' when only '%s' is allowed", ns, s.config.SingleNamespace)
@@ -182,10 +185,18 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) empty(w http.ResponseWriter, r *http.Request) {
-	// This is a special route for removing dialogs
-	// It returns an empty response to remove the dialog
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(""))
+}
+
+func (s *server) healthCheck(w http.ResponseWriter, r *http.Request) {
+	if s.healthy {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	} else {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte("Service Unavailable"))
+	}
 }
 
 func (s *server) return500(w http.ResponseWriter) {

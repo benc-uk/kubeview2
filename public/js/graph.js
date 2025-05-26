@@ -1,13 +1,12 @@
 import { getConfig } from './config.js'
-import { cy, resMap, showPanel, hidePanel } from './main.js'
+import { cy, resMap, hidePanel } from './main.js'
 
 import Alpine from '../ext/alpinejs.esm.min.js'
 
+const ICON_PATH = 'public/img/res'
+
 /**
  * Used to add a resource to the graph
- * @param {Object} res - The Kubernetes resource object
- * @param {Object} cy - The Cytoscape instance
- * @param {Object} resMap - The resource map to keep track of resources
  */
 export function addResource(res) {
   if (!cy) return
@@ -63,10 +62,11 @@ export function updateResource(res) {
   resMap[res.metadata.uid] = res
   processLinks(res)
 
-  if (Alpine.store('res').id === res.metadata.uid && Alpine.store('open')) {
-    // If the updated resource is the one currently displayed in the panel, update the panel
-    showPanel(res.metadata.uid)
-  }
+  // TODO: FIX THIS!!!!!!!! 🔥🔥🔥🔥🔥🔥
+  // if (Alpine.store('res').id === res.metadata.uid && Alpine.store('open')) {
+  //   // If the updated resource is the one currently displayed in the panel, update the panel
+  //   showPanel(res.metadata.uid)
+  // }
 }
 
 /**
@@ -186,13 +186,17 @@ function makeNode(res) {
     }
   }
 
+  let colourSuffix = statusColour(res)
+  if (colourSuffix !== '') {
+    colourSuffix = '-' + colourSuffix
+  }
+
   return {
     data: {
       resource: true,
-      statusColour: statusColour(res),
       id: res.metadata.uid,
       label: label,
-      icon: res.kind.toLowerCase(),
+      icon: `${ICON_PATH}/${res.kind.toLowerCase() + colourSuffix}.svg`,
       kind: res.kind,
       ip: res.status?.podIP || res.status?.hostIP || null,
     },
@@ -253,10 +257,10 @@ function statusColour(res) {
     }
   } catch (e) {
     console.error('💥 Error calculating status colour:', e)
-    return null
+    return ''
   }
 
-  return null
+  return ''
 }
 
 /**
@@ -265,11 +269,22 @@ function statusColour(res) {
 export function layout() {
   if (!cy) return
 
-  // Use breadthfirst with Deployments or DaemonSets or StatefulSets at the root
+  // Use breadthfirst with roots set to the main resources
+  // This will create a tree-like structure with the main resources at the top
   cy.layout({
     name: 'breadthfirst',
+    directed: true,
     roots: cy.nodes('[kind = "Ingress"],[kind = "Deployment"],[kind = "DaemonSet"],[kind = "StatefulSet"]'),
     nodeDimensionsIncludeLabels: true,
     spacingFactor: 1,
+  }).run()
+}
+
+globalThis.coseLayout = function () {
+  cy.layout({
+    name: 'cose',
+    randomize: false,
+    numIter: 5000,
+    nodeDimensionsIncludeLabels: true,
   }).run()
 }

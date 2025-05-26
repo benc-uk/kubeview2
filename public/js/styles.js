@@ -1,9 +1,12 @@
-export const nodeStyle = {
-  'background-opacity': 0,
+// ==========================================================================================
+// Style sheet for Cytoscape.js
+// This file defines the styles for nodes and edges in the Cytoscape graph
+// ==========================================================================================
+
+import cytoscape from '../ext/cytoscape.esm.min.mjs'
+
+const nodeStyle = {
   label: 'data(label)',
-  'background-fit': 'cover',
-  'background-width': '90%',
-  'background-height': '90%',
   shape: 'roundrectangle',
   width: 128,
   height: 128,
@@ -11,11 +14,30 @@ export const nodeStyle = {
   'font-size': '20%',
   color: '#eee',
   'text-valign': 'bottom',
-  'text-margin-y': '10vh',
+  'text-margin-y': '1vh',
   'text-outline-color': '#111',
   'text-outline-width': 4,
-  'background-image': 'public/img/res/default.svg',
-  // display: function (ele) {
-  //   return ele.data('kind') !== 'Endpoints' ? 'element' : 'none'
-  // },
+  // Super important! This makes the nodes have icons that match the resource type
+  // See makeNode in graph.js for how this is set
+  'background-image': 'data(icon)',
+  'background-fit': 'contain',
+  'background-opacity': 0,
 }
+
+const edgeStyle = {
+  'target-arrow-shape': 'triangle',
+  'curve-style': 'bezier',
+  width: 6,
+  'line-color': '#555',
+  'arrow-scale': '1.5',
+  'target-arrow-color': '#555',
+}
+
+export const styleSheet = cytoscape.stylesheet()
+
+styleSheet.selector('node').style(nodeStyle)
+styleSheet.selector('edge').style(edgeStyle)
+styleSheet.selector('node:selected').style({
+  'border-width': '5',
+  'border-color': 'rgb(0, 120, 215)',
+})

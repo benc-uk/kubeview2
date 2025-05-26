@@ -13,7 +13,7 @@ templ NamespacePicker(nameSpaces []string) {
 		</script>
 		</div>
 	} else {
-		<select hx-get="load" hx-on::before-send="reset()" name="namespace" hx-target="#dummy" hx-indicator="#spinner">
+		<select hx-get="load" name="namespace" hx-target="#dummy" hx-indicator="#spinner">
 			<option disabled selected>Choose a namespace</option>
 			for _, item := range nameSpaces {
 				<option value={ item }>{ item }</option>
@@ -25,7 +25,7 @@ templ NamespacePicker(nameSpaces []string) {
 // This is rendered when the /load endpoint is hit and the namespace is selected
 // It will pass the namespace data to the client side to be rendered in the main view
 templ PassNamespaceData(ns string, data types.NamespaceData) {
-	<div id="mainView" hx-swap-oob="true"></div>
+	<div id="welcome" hx-swap-oob="true" class="is-hidden"></div>
 	<div id="dialogs" hx-swap-oob="true"></div>
 	// This is almost true magic
 	// Calls a JS function, on the client side, how? Don't ask...

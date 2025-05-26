@@ -6,22 +6,19 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 var version = "0.0.0"
 
 func main() {
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
 	config := getConfig()
 
 	log.Printf("🚀 KubeView %s starting on port %d...\n", version, config.Port)
 	log.Printf("🔧 Configuration %+v", config)
 
-	// This configures the HTTP server, routing and SSE connection
+	r := chi.NewRouter()
+
+	// This configures the core server, handling pretty much everything
 	NewServer(r, config, version)
 
 	//nolint:gosec

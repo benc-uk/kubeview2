@@ -8,13 +8,39 @@ import Alpine from '../ext/alpinejs.esm.min.js'
 
 import { getConfig } from './config.js'
 import { initEventStreaming } from './events.js'
-import { nodeStyle } from './styles.js'
+import { styleSheet } from './styles.js'
 import { addResource, processLinks, layout } from './graph.js'
 
 // These are shared variables used across the application
 // `cy` is the Cytoscape instance, `resMap` is a map of resources by their UID
-export let cy = null
 export const resMap = {}
+
+// This is why we are here, Cytoscape will be used to render all the data
+export const cy = cytoscape({
+  container: document.getElementById('mainView'),
+  boxSelectionEnabled: false,
+  style: styleSheet,
+})
+
+// Add a click handler to show the info panel
+cy.on('tap', 'node', function (evt) {
+  const node = evt.target
+  if (node.data('resource')) {
+    showPanel(node.id())
+  }
+})
+
+// hide the info panel when clicking outside of a node
+cy.on('tap', function (evt) {
+  if (evt.target === cy) {
+    hidePanel()
+  }
+})
+
+window.addEventListener('resize', function () {
+  cy.resize()
+  cy.fit(null, 10)
+})
 
 // Alpine.js stores to hold global state
 // The 'res' store holds the currently selected resource for showing in the side panel
@@ -28,6 +54,10 @@ Alpine.store('res', {
 })
 Alpine.store('open', false)
 Alpine.store('namespace', '')
+
+Alpine.data('mainApp', () => ({
+  labelsShown: false,
+}))
 
 // Initialize & start Alpine.js
 Alpine.start()
@@ -43,50 +73,12 @@ window.addEventListener('DOMContentLoaded', () => {
  */
 globalThis.namespaceLoaded = function (ns, data) {
   console.log(`📚 Data for namespace '${ns}' received`)
+
   Alpine.store('namespace', ns)
+  Alpine.store('open', false)
+  Alpine.store('error', '')
   window.history.replaceState({}, '', `?ns=${ns}`)
-
-  // This is why we are here, Cytoscape will be used to render all the data
-  cy = cytoscape({
-    container: document.getElementById('mainView'),
-    boxSelectionEnabled: false,
-  })
-
-  cy.style().selector('node[resource]').style(nodeStyle)
-  cy.style()
-    .selector('node[resource]')
-    .style('background-image', function (ele) {
-      return ele.data('statusColour')
-        ? `public/img/res/${ele.data('icon')}-${ele.data('statusColour')}.svg`
-        : `public/img/res/${ele.data('icon')}.svg`
-    })
-  cy.style().selector('node:selected').style({
-    'border-width': '4',
-    'border-color': 'rgb(0, 120, 215)',
-  })
-
-  // Add a click handler to show the info panel
-  cy.on('tap', 'node', function (evt) {
-    const node = evt.target
-    if (node.data('resource')) {
-      showPanel(node.id())
-    }
-  })
-
-  // hide the info panel when clicking outside of a node
-  cy.on('tap', function (evt) {
-    if (evt.target === cy) {
-      hidePanel()
-    }
-  })
-
-  window.addEventListener('resize', function () {
-    if (cy) {
-      cy.resize()
-    }
-
-    layout()
-  })
+  cy.elements().remove()
 
   // Debug only
   if (getConfig().debug) {
@@ -111,25 +103,6 @@ globalThis.namespaceLoaded = function (ns, data) {
   }
 
   layout()
-}
-
-/**
- * When the user changes the namespace, we need to reset the graph
- * This is called by HTMX, which is why it's in the global scope
- */
-globalThis.reset = function () {
-  console.log('🔄 Resetting namespace')
-
-  Alpine.store('open', false)
-  Alpine.store('namespace', '')
-  Alpine.store('error', '')
-
-  if (cy !== null) {
-    cy.destroy()
-    cy = null
-  }
-
-  document.getElementById('mainView').innerHTML = ''
 }
 
 /**
