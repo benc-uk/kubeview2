@@ -7,18 +7,29 @@ templ NamespacePicker(nameSpaces []string) {
 	{{ singleNs := len(nameSpaces) == 1 }}
 	if singleNs {
 		// When there is only one namespace, we can directly load it, and hide the namespace picker
-		<div id="namespacePicker" hx-swap-oob="true" hx-get={ "load?namespace=" + nameSpaces[0] } hx-target="#dummy" hx-indicator="#spinner" hx-trigger="load">
-			<script>
-		  reset()
-		</script>
-		</div>
+		<div id="namespacePicker" hx-swap-oob="true" hx-get={ "load?namespace=" + nameSpaces[0] } hx-target="#dummy" hx-indicator="#spinner" hx-trigger="load"></div>
 	} else {
-		<select hx-get="load" name="namespace" hx-target="#dummy" hx-indicator="#spinner">
+		<select hx-get="load" name="namespace" hx-target="#dummy" hx-indicator="#spinner" id="namespaceSelect">
 			<option disabled selected>Choose a namespace</option>
 			for _, item := range nameSpaces {
 				<option value={ item }>{ item }</option>
 			}
 		</select>
+		<script>
+			setTimeout(() => {
+				const urlParams = new URLSearchParams(window.location.search)
+				if (urlParams.has('ns')) {
+					const urlNamespace = urlParams.get('ns')
+
+					if (urlNamespace) {
+						const event = new Event('change')
+						const select = document.getElementById('namespaceSelect').firstChild
+						select.value = urlNamespace
+						select.dispatchEvent(event)
+					}
+				}
+			}, 200)
+		</script>
 	}
 }
 
@@ -30,18 +41,4 @@ templ PassNamespaceData(ns string, data types.NamespaceData) {
 	// This is almost true magic
 	// Calls a JS function, on the client side, how? Don't ask...
 	@templ.JSFuncCall("namespaceLoaded", ns, data)
-}
-
-// This is rendered when no data is available for the selected namespace
-templ NoData(ns string) {
-	<div hx-swap-oob="true" id="mainView">
-		<div class="notification is-dark mx-5 mt-5">
-			<p class="title is-3">No data available</p>
-			<p>Try selecting a different namespace</p>
-		</div>
-	</div>
-	<script>
-		window.history.replaceState({}, '', `?ns={{ ns }}`);
-		console.log("🫙 No data available for namespace {{ ns }}");
-	</script>
 }

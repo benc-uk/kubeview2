@@ -5,8 +5,8 @@ templ Index() {
 		<head>
 			@htmlHeader()
 		</head>
-		<body hx-on::error="showError(event)" x-data="mainApp">
-			<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+		<body x-data="mainApp">
+			<nav class="navbar is-dark" role="navigation" @htmx:error="htmxError(event)">
 				<div class="navbar-brand">
 					<a class="navbar-item" href="/">
 						<img src="public/img/icon.png" alt="Logo" width="32" height="32"/>
@@ -18,7 +18,7 @@ templ Index() {
 						<div class="navbar-item" id="namespacePicker">
 							<form>
 								<div class="field">
-									<div class="select" hx-get="namespaces" hx-trigger="load" hx-on::after-settle="firstLoad()" id="namespaceSelect">
+									<div class="select" hx-get="namespaces" hx-trigger="load" id="namespaceSelect">
 										<select>
 											<option value="" selected disabled>🔃 Loading...</option>
 										</select>
@@ -28,14 +28,12 @@ templ Index() {
 									</button>
 								</div>
 							</form>
-							<div class="navbar-item">
-								<button class="button is-primary" onclick="coseLayout()">
-									<span class="icon"><i class="fas fa-circle-nodes"></i></span>
-								</button>
-								<button class="button is-primary" onclick="coseLayout()">
-									<span class="icon"><i class="fas fa-expand"></i></span>
-								</button>
-							</div>
+							<button class="button is-primary" @click="coseLayout()">
+								<span class="icon"><i class="fas fa-circle-nodes"></i></span>
+							</button>
+							<button class="button is-primary" @click="fit()">
+								<span class="icon"><i class="fas fa-expand"></i></span>
+							</button>
 							<div id="spinner">
 								<img src="public/img/spinner.svg" alt="Loading..." width="40" height="40" class="htmx-indicator"/>
 							</div>
@@ -59,16 +57,17 @@ templ Index() {
 					</div>
 				</div>
 			</nav>
-			<div class="notification is-danger mx-5 mt-5" x-show="$store.error" x-cloak>
+			<div class="notification is-danger mx-5 mt-5" x-show="errorMessage" x-cloak>
 				<p class="title is-3">💀 A terrible thing happened!</p>
-				<p x-text="$store.error"></p>
+				<p x-text="errorMessage"></p>
+				<button class="button is-light" @click="window.location.reload()">Reload</button>
 			</div>
 			<!-- content will be swapped in here to replace this notification -->
-			<div class="notification is-success mx-5 mt-5" id="welcome">
+			<div class="notification is-success mx-5 mt-5" id="welcome" :class="{'is-hidden': window.location.search != ''}" x-cloak>
 				<p class="title is-3">Welcome to KubeView</p>
 				<p>Choose a namespace from the dropdown to view resources</p>
 			</div>
-			<div id="mainView">
+			<div id="mainView" x-show="!errorMessage" x-cloak>
 				<!-- This is the main view where the cytoscape graph is shown -->
 			</div>
 			<div id="dummy" class="is-hidden">
@@ -78,17 +77,17 @@ templ Index() {
 				<!-- Dialog boxes here -->
 			</div>
 			<!-- This is the info panel that shows resource details -->
-			<article class="panel is-link" id="infoPanel" x-transition:enter="slidein" x-transition:leave="slideout" x-show="$store.open" x-cloak>
+			<article class="panel is-link" id="infoPanel" x-transition:enter="slidein" x-transition:leave="slideout" x-show="panelOpen" x-cloak>
 				<p class="panel-heading py-2">
-					<img :src="`public/img/res/${$store.res.icon}.svg`" width="32" height="32" style="vertical-align: middle;"/>
-					<span x-text="$store.res.kind" style="vertical-align: middle;"></span>
+					<img :src="`public/img/res/${panelData.icon}.svg`" width="32" height="32" style="vertical-align: middle;"/>
+					<span x-text="panelData.kind" style="vertical-align: middle;"></span>
 				</p>
 				<section>
 					<div class="panel-block">
 						<button class="button is-small is-primary" :class="{'is-outlined':!labelsShown}" @click="labelsShown=!labelsShown">Labels</button>
 					</div>
 					<!-- Labels -->
-					<template x-for="(value, label) in $store.res.labels" :key="label">
+					<template x-for="(value, label) in panelData.labels" :key="label">
 						<div class="panel-block py-0" x-show="labelsShown">
 							<div class="py-1 has-text-weight-bold" x-text="label"></div>
 							<div class="py-1" x-text="`: ${value}`"></div>
@@ -98,14 +97,14 @@ templ Index() {
 					<div class="panel-block has-background-dark py-1">
 						<label class="label">Properties</label>
 					</div>
-					<template x-for="(value, prop) in $store.res.props" :key="prop">
+					<template x-for="(value, prop) in panelData.props" :key="prop">
 						<div class="panel-block py-0">
 							<div class="py-1 has-text-weight-bold property" x-text="prop"></div>
 							<div class="py-1" x-text="value"></div>
 						</div>
 					</template>
 					<!-- Containers (pods only) -->
-					<template x-for="(cont, name) in $store.res.containers" :key="name">
+					<template x-for="(cont, name) in panelData.containers" :key="name">
 						<div>
 							<div class="panel-block has-background-dark py-1">
 								<label class="label" x-text="`Container: ${name}`"></label>

@@ -1,7 +1,5 @@
 import { getConfig } from './config.js'
-import { cy, resMap, hidePanel } from './main.js'
-
-import Alpine from '../ext/alpinejs.esm.min.js'
+import { cy, resMap } from './main.js'
 
 const ICON_PATH = 'public/img/res'
 
@@ -9,8 +7,6 @@ const ICON_PATH = 'public/img/res'
  * Used to add a resource to the graph
  */
 export function addResource(res) {
-  if (!cy) return
-
   // Endpoints are stored in the resmap but not added to the graph
   if (res.kind === 'Endpoints') {
     resMap[res.metadata.uid] = res
@@ -28,6 +24,7 @@ export function addResource(res) {
   processLinks(res)
 
   resMap[res.metadata.uid] = res
+  return res.metadata.uid
 }
 
 /**
@@ -35,8 +32,6 @@ export function addResource(res) {
  * It will update the node data and the status colour
  */
 export function updateResource(res) {
-  if (!cy) return
-
   // Endpoints are stored in the resmap but not added to the graph
   if (res.kind === 'Endpoints') {
     resMap[res.metadata.uid] = res
@@ -61,28 +56,14 @@ export function updateResource(res) {
   node.data(makeNode(res).data)
   resMap[res.metadata.uid] = res
   processLinks(res)
-
-  // TODO: FIX THIS!!!!!!!! 🔥🔥🔥🔥🔥🔥
-  // if (Alpine.store('res').id === res.metadata.uid && Alpine.store('open')) {
-  //   // If the updated resource is the one currently displayed in the panel, update the panel
-  //   showPanel(res.metadata.uid)
-  // }
 }
 
 /**
  * Used remove a resource from the graph
  */
 export function removeResource(res) {
-  if (!cy) return
-
   cy.remove('#' + res.metadata.uid)
-
   delete resMap[res.metadata.uid]
-
-  if (Alpine.store('res').id === res.metadata.uid) {
-    // If the removed resource is the one currently displayed in the panel, hide the panel
-    hidePanel()
-  }
 }
 
 /**
@@ -112,8 +93,6 @@ export function addEdge(sourceId, targetId) {
  * This is used to link Ingresses to Services and Services to Pods, etc.
  */
 export function processLinks(res) {
-  if (!cy) return
-
   if (res.metadata.ownerReferences) {
     for (const ownerRef of res.metadata.ownerReferences) {
       addEdge(ownerRef.uid, res.metadata.uid)
@@ -158,7 +137,7 @@ export function processLinks(res) {
   // If the resource is a endpoint, we find matching service and link it to the pods
   if (res.kind === 'Endpoints') {
     const service = cy.$(`node[kind = "Service"][label = "${res.metadata.name}"]`)
-    if (service) {
+    if (service.length == 1) {
       // find the pods in the endpoints and link them to the service
       for (const subset of res.subsets || []) {
         for (const addr of subset.addresses || []) {
@@ -267,8 +246,6 @@ function statusColour(res) {
  * Layout the graph
  */
 export function layout() {
-  if (!cy) return
-
   // Use breadthfirst with roots set to the main resources
   // This will create a tree-like structure with the main resources at the top
   cy.layout({

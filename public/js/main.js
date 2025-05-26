@@ -6,10 +6,11 @@
 import cytoscape from '../ext/cytoscape.esm.min.mjs'
 import Alpine from '../ext/alpinejs.esm.min.js'
 
-import { getConfig } from './config.js'
+import { getConfig, saveConfig } from './config.js'
 import { initEventStreaming } from './events.js'
 import { styleSheet } from './styles.js'
 import { addResource, processLinks, layout } from './graph.js'
+import { showToast } from '../ext/toast.js'
 
 // These are shared variables used across the application
 // `cy` is the Cytoscape instance, `resMap` is a map of resources by their UID
@@ -18,45 +19,104 @@ export const resMap = {}
 // This is why we are here, Cytoscape will be used to render all the data
 export const cy = cytoscape({
   container: document.getElementById('mainView'),
-  boxSelectionEnabled: false,
+  // boxSelectionEnabled: false,
   style: styleSheet,
 })
 
-// Add a click handler to show the info panel
-cy.on('tap', 'node', function (evt) {
-  const node = evt.target
-  if (node.data('resource')) {
-    showPanel(node.id())
-  }
-})
-
-// hide the info panel when clicking outside of a node
-cy.on('tap', function (evt) {
-  if (evt.target === cy) {
-    hidePanel()
-  }
-})
+export let currentNamespace = ''
 
 window.addEventListener('resize', function () {
   cy.resize()
   cy.fit(null, 10)
 })
 
-// Alpine.js stores to hold global state
-// The 'res' store holds the currently selected resource for showing in the side panel
-Alpine.store('res', {
-  kind: 'default',
-  id: '',
-  icon: 'default',
-  props: {},
-  containers: {},
-  labels: {},
-})
-Alpine.store('open', false)
-Alpine.store('namespace', '')
-
 Alpine.data('mainApp', () => ({
   labelsShown: false,
+  panelOpen: false,
+  panelData: {
+    kind: 'default',
+    icon: 'default',
+    props: {},
+    containers: {},
+    labels: {},
+  },
+  errorMessage: '',
+
+  htmxError(event) {
+    if (!event) this.errorMessage = ''
+
+    const info = event.detail.errorInfo
+    this.errorMessage = `${info.error}, METHOD: ${info.requestConfig.verb}, PATH:${info.pathInfo.finalRequestPath}`
+  },
+
+  coseLayout() {
+    cy.layout({
+      name: 'cose',
+      randomize: false,
+      numIter: 5000,
+      nodeDimensionsIncludeLabels: true,
+    }).run()
+  },
+
+  fit() {
+    cy.resize()
+    cy.fit(null, 10)
+  },
+
+  init() {
+    cy.on('tap', 'node', (evt) => {
+      const node = evt.target
+      if (node.data('resource')) {
+        this.panelOpen = true
+        this.panelData = getPanelData(node.id())
+      }
+    })
+
+    // hide the info panel when clicking outside of a node
+    cy.on('tap', (evt) => {
+      if (evt.target === cy) this.panelOpen = false
+    })
+
+    // Handle node removal events
+    cy.on('remove', 'node', (evt) => {
+      if (evt.target.id() === this.panelData.id) {
+        this.$nextTick(() => {
+          this.panelOpen = false
+        })
+      }
+    })
+
+    // Handle data updates for nodes
+    cy.on('data', 'node', (evt) => {
+      const node = evt.target
+      if (this.panelData && node.id() === this.panelData.id) {
+        this.$nextTick(() => {
+          const newData = getPanelData(node.id())
+          if (!newData) {
+            this.panelOpen = false
+            return
+          }
+          this.panelData = newData
+        })
+      }
+    })
+
+    cy.on('layoutstop', () => {
+      if (cy.nodes().length === 0) {
+        showToast('No resources found in this namespace<br>Check your filter settings', 3000, 'top-center')
+      }
+    })
+  },
+}))
+
+Alpine.data('configComponent', () => ({
+  cfg: getConfig(),
+  tab: 1,
+  namespace: currentNamespace,
+
+  save() {
+    saveConfig(this.cfg)
+  },
 }))
 
 // Initialize & start Alpine.js
@@ -74,9 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
 globalThis.namespaceLoaded = function (ns, data) {
   console.log(`📚 Data for namespace '${ns}' received`)
 
-  Alpine.store('namespace', ns)
-  Alpine.store('open', false)
-  Alpine.store('error', '')
+  currentNamespace = ns
   window.history.replaceState({}, '', `?ns=${ns}`)
   cy.elements().remove()
 
@@ -86,11 +144,12 @@ globalThis.namespaceLoaded = function (ns, data) {
     console.dir(data)
   }
 
+  let resCount = 0
   // Pass 1 - Add ALL the resources to the graph
   for (const kindKey in data) {
     const resources = data[kindKey]
     for (const res of resources || []) {
-      addResource(res)
+      if (addResource(res)) resCount++
     }
   }
 
@@ -102,39 +161,11 @@ globalThis.namespaceLoaded = function (ns, data) {
     }
   }
 
-  layout()
-}
-
-/**
- * This is called when the page is loaded for the first time
- * It is called from the server side template, hx-on::after-settle
- */
-globalThis.firstLoad = function () {
-  // This is used when the page is loaded with a namespace in the URL
-  const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.has('ns')) {
-    const urlNamespace = urlParams.get('ns')
-    Alpine.store('namespace', urlNamespace)
-
-    if (urlNamespace) {
-      const event = new Event('change')
-      const select = document.getElementById('namespaceSelect').firstChild
-      select.value = urlNamespace
-      select.dispatchEvent(event)
-    }
+  if (resCount === 0) {
+    console.warn('⚠️ No resources found in this namespace')
   }
-}
 
-/**
- * Show an error message in the UI
- * This is used when HTMX encounters an error, which is why it's in the global scope
- */
-window.showError = function (event) {
-  console.log('💥 Error from HTMX:', event.detail.errorInfo)
-  const info = event.detail.errorInfo
-  const errorMessage = `${info.error}, METHOD: ${info.requestConfig.verb}, PATH:${info.pathInfo.finalRequestPath}`
-
-  Alpine.store('error', errorMessage)
+  layout()
 }
 
 /**
@@ -142,7 +173,7 @@ window.showError = function (event) {
  * This will populate the panel with the resource data and show it
  * @param {string} id - The ID of the resource to show
  */
-export function showPanel(id) {
+function getPanelData(id) {
   // Find the resource in the resMap
   const res = resMap[id]
   if (!res) return
@@ -219,21 +250,12 @@ export function showPanel(id) {
     }
   }
 
-  Alpine.store('res', {
+  return {
     kind: res.kind,
     id: res.metadata.uid,
     icon: res.kind.toLowerCase(),
     props,
     containers,
     labels,
-  })
-
-  Alpine.store('open', true)
-}
-
-/**
- * Hide the side info panel
- */
-export function hidePanel() {
-  Alpine.store('open', false)
+  }
 }

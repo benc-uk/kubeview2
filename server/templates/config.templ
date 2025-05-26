@@ -3,15 +3,15 @@ package templates
 templ ConfigDialog(kubeHost string, ver string) {
 	<div
 		class="modal is-active"
-		x-data="{ cfg: getConfig(), tab: 1 }"
+		x-data="configComponent"
 	>
 		<div class="modal-background"></div>
-		<div class="modal-card">
+		<div class="modal-card better-shad">
 			<header class="modal-card-head has-background-primary py-3">
 				<p class="modal-card-title has-text-black">Settings</p>
 				<button class="delete" aria-label="close" hx-get="empty" hx-target="#dialogs"></button>
 			</header>
-			<div class="modal-content has-background-dark" style="min-height: 330px">
+			<div class="modal-content dark-blur" style="min-height: 330px">
 				<section class="my-2 mx-2">
 					<div class="tabs">
 						<ul>
@@ -82,9 +82,9 @@ templ ConfigDialog(kubeHost string, ver string) {
 					</div>
 				</section>
 			</div>
-			<footer class="modal-card-foot">
+			<footer class="modal-card-foot py-3 is-flex is-justify-content-center">
 				<div class="buttons">
-					<button class="button is-success" :hx-get="`load?namespace=${$store.namespace}`" hx-on::before-send="reset()" hx-target="#dummy" hx-indicator="#spinner" hx-trigger="click" @click="saveConfig(cfg);">Save changes</button>
+					<button class="button is-success" :hx-get="`load?namespace=${namespace}`" hx-target="#dummy" hx-indicator="#spinner" hx-trigger="click" @click="save()">Save changes</button>
 					<button class="button" hx-get="empty" hx-target="#dialogs">Cancel</button>
 				</div>
 			</footer>

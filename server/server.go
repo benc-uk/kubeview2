@@ -113,6 +113,7 @@ func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 	log.Println("🔍 Fetching list of namespaces")
+
 	var err error
 
 	var nsList []string
@@ -164,17 +165,6 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 		log.Printf("💩 Error fetching namespace: %v", err)
 		s.return500(w)
 
-		return
-	}
-
-	// Check every key in the data map and see if it has any items
-	totalItems := 0
-	for _, v := range data {
-		totalItems += len(v)
-	}
-
-	if totalItems == 0 {
-		_ = templates.NoData(ns).Render(r.Context(), w)
 		return
 	}
 

@@ -47,12 +47,12 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" hx-trigger=\"load\"><script>\n\t\t  reset()\n\t\t</script></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" hx-trigger=\"load\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<select hx-get=\"load\" name=\"namespace\" hx-target=\"#dummy\" hx-indicator=\"#spinner\"><option disabled selected>Choose a namespace</option> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<select hx-get=\"load\" name=\"namespace\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" id=\"namespaceSelect\"><option disabled selected>Choose a namespace</option> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -64,7 +64,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(item)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 19, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 15, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -77,7 +77,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(item)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 19, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 15, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -88,7 +88,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</select>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</select><script>\n\t\t\tsetTimeout(() => {\n\t\t\t\tconst urlParams = new URLSearchParams(window.location.search)\n\t\t\t\tif (urlParams.has('ns')) {\n\t\t\t\t\tconst urlNamespace = urlParams.get('ns')\n\n\t\t\t\t\tif (urlNamespace) {\n\t\t\t\t\t\tconst event = new Event('change')\n\t\t\t\t\t\tconst select = document.getElementById('namespaceSelect').firstChild\n\t\t\t\t\t\tselect.value = urlNamespace\n\t\t\t\t\t\tselect.dispatchEvent(event)\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}, 200)\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -125,60 +125,6 @@ func PassNamespaceData(ns string, data types.NamespaceData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = templ.JSFuncCall("namespaceLoaded", ns, data).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-// This is rendered when no data is available for the selected namespace
-func NoData(ns string) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var6 == nil {
-			templ_7745c5c3_Var6 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div hx-swap-oob=\"true\" id=\"mainView\"><div class=\"notification is-dark mx-5 mt-5\"><p class=\"title is-3\">No data available</p><p>Try selecting a different namespace</p></div></div><script>\n\t\twindow.history.replaceState({}, '', `?ns=")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var7, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(ns)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 44, Col: 48}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "`);\n\t\tconsole.log(\"🫙 No data available for namespace ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var8, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(ns)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 45, Col: 57}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\");\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

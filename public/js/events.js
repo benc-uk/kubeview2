@@ -4,7 +4,7 @@
 // ==========================================================================================
 import { layout, removeResource, addResource, updateResource } from './graph.js'
 import { getConfig } from './config.js'
-import Alpine from '../ext/alpinejs.esm.min.js'
+import { currentNamespace } from './main.js'
 
 export function initEventStreaming() {
   // Generate or fetch random client token, to identify the client
@@ -25,7 +25,7 @@ export function initEventStreaming() {
       return
     }
 
-    if (res.metadata.namespace !== Alpine.store('namespace')) return
+    if (res.metadata.namespace !== currentNamespace) return
 
     if (getConfig().debug) console.log('⬆️ Add resource:', res.kind, res.metadata.name)
 
@@ -43,7 +43,7 @@ export function initEventStreaming() {
       return
     }
 
-    if (res.metadata.namespace !== Alpine.store('namespace')) return
+    if (res.metadata.namespace !== currentNamespace) return
 
     if (getConfig().debug) console.log('☠️ Delete resource:', res.kind, res.metadata.name)
 
@@ -61,7 +61,7 @@ export function initEventStreaming() {
       return
     }
 
-    if (res.metadata.namespace !== Alpine.store('namespace')) return
+    if (res.metadata.namespace !== currentNamespace) return
 
     if (getConfig().debug) console.log('⬆️ Update resource:', res.kind, res.metadata.name)
 

@@ -43,7 +43,3 @@ export function saveConfig(newConfig) {
   localStorage.setItem('kubeviewConfig', JSON.stringify(newConfig))
   config = newConfig
 }
-
-// Expose the config functions globally
-globalThis.getConfig = getConfig
-globalThis.saveConfig = saveConfig
