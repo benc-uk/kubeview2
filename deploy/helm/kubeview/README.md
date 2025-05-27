@@ -22,18 +22,18 @@ Kubernetes cluster visualiser and visual explorer
 |-----|------|---------|-------------|
 | singleNamespace | bool | `false` | Configure single namespace mode: `false` - Show resources in all namespaces. This is the default. `true` - Show resources only in namespace Kubeview is installed to. "string" - Only show resources in the named namespace (can be *different* from the one Kubeview is installed to). |
 | ingress.enabled | bool | `false` | Expose the app via an Ingress |
-| ingress.annotations | object | `{}` | Extra Ingress annotations |
-| ingress.hosts | list | `[{"host":"chart-example.local"}]` | The domain name to use for the Ingress |
-| ingress.tls | list | `[]` | Use this to reference a TLS secret to enable HTTPS |
+| ingress.host | string | `""` | The domain name to use for the Ingress, required if enabled |
+| ingress.tlsSecretName | string | `""` | Set to reference a TLS secret (cert) to enable HTTPS |
 | ingress.className | string | `""` | The Ingress class to use, if you have multiple ingress controllers |
+| ingress.annotations | object | `{}` | Extra Ingress annotations |
 | loadBalancer.enabled | bool | `true` | Set to true to enable the LoadBalancer service type |
 | loadBalancer.IP | string | `""` | Optionally set the LoadBalancer IP address if you want to use a static IP |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository |
 | nameOverride | string | `""` | This is to override the chart name when naming resources |
 | fullnameOverride | string | `""` | This is to fully override the name of the chart & release when naming resources |
-| image.repository | string | `"ghcr.io/benc-uk/kubeview2"` | This sets the image registry and repository, only change this if you've built your own image. |
+| image.repository | string | `"ghcr.io/benc-uk/kubeview2"` | Only change this if you've built & pushed your own image to a registry |
 | image.pullPolicy | string | `"Always"` | This sets the pull policy for images |
-| image.tag | string | `"latest"` | Overrides the image tag  |
+| image.tag | string | `"latest"` | Specify the image tag to use. If you want to use a specific version, set it here. |
 | podAnnotations | object | `{}` | For adding custom Kubernetes Annotations to the pods |
 | podLabels | object | `{}` | For adding custom Kubernetes Labels to the pods |
 | podSecurityContext | object | `{}` | Sets pod security context if you need that sort of thing |
