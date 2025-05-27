@@ -1,11 +1,15 @@
 package templates
 
-templ Index() {
+templ Index(urlNamespace string) {
 	<html lang="en" data-theme="dark">
 		<head>
 			@htmlHeader()
 		</head>
 		<body x-data="mainApp">
+			<input type="hidden" name="namespace" value={ urlNamespace }/>
+			if urlNamespace != "" {
+				<div hx-get="fetchData" hx-include="[name='namespace']" hx-indicator="#spinner" hx-trigger="load"></div>
+			}
 			<nav class="navbar is-dark" role="navigation" @htmx:error="htmxError(event)">
 				<div class="navbar-brand">
 					<a class="navbar-item" href="/">
@@ -15,10 +19,11 @@ templ Index() {
 				</div>
 				<div class="navbar-menu is-active">
 					<div class="navbar-start">
-						<div class="navbar-item" id="namespacePicker">
+						<div class="navbar-item">
 							<form>
 								<div class="field">
-									<div class="select" hx-get="namespaces" hx-trigger="load" id="namespaceSelect">
+									<!-- This HTMX request starts everything -->
+									<div class="select" hx-get="namespaces" hx-include="[name='namespace']" hx-trigger="load" id="namespaceSelect">
 										<select>
 											<option value="" selected disabled>🔃 Loading...</option>
 										</select>
@@ -35,7 +40,7 @@ templ Index() {
 								<span class="icon"><i class="fas fa-expand"></i></span>
 							</button>
 							<div id="spinner">
-								<img src="public/img/spinner.svg" alt="Loading..." width="40" height="40" class="htmx-indicator"/>
+								<img src="public/img/spinner.svg" width="40" height="40" class="htmx-indicator"/>
 							</div>
 						</div>
 					</div>

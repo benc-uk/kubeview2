@@ -141,7 +141,6 @@ globalThis.namespaceLoaded = function (ns, data) {
   window.history.replaceState({}, '', `?ns=${ns}`)
   cy.elements().remove()
 
-  // Debug only
   if (getConfig().debug) {
     console.log('🐞 DEBUG! Received data:')
     console.dir(data)

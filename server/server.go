@@ -80,7 +80,7 @@ func NewServer(r *chi.Mux, conf Config, ver string) *server {
 	// App routes
 	r.Get("/", srv.index)
 	r.Get("/namespaces", srv.fetchNamespaceList)
-	r.Get("/load", srv.loadNamespace)
+	r.Get("/fetchData", srv.loadNamespace)
 	r.Get("/showConfig", srv.showConfig)
 	r.Get("/empty", srv.empty)
 	r.Get("/health", srv.healthCheck)
@@ -107,7 +107,10 @@ func NewServer(r *chi.Mux, conf Config, ver string) *server {
 
 // HTTP handler for the main app index page
 func (s *server) index(w http.ResponseWriter, r *http.Request) {
-	err := templates.Index().Render(r.Context(), w)
+	// check for ns in the query string, if it exists, we will use it to load the namespace
+	ns := r.URL.Query().Get("ns")
+
+	err := templates.Index(ns).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}
@@ -124,6 +127,8 @@ func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
 // HTTP handler to fetch the list of namespaces from the Kubernetes cluster
 func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 	log.Println("🔍 Fetching list of namespaces")
+
+	preSelect := r.URL.Query().Get("namespace")
 
 	var err error
 
@@ -155,7 +160,7 @@ func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Render the namespace picker (HTML <select>) template with the list of namespaces
-	err = templates.NamespacePicker(nsList).Render(r.Context(), w)
+	err = templates.NamespacePicker(nsList, preSelect).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}

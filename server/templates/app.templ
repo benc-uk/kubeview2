@@ -6,33 +6,22 @@ package templates
 // ==========================================================================================
 
 // This is fragment is rendered once the list of namespaces is loaded from /namespaces endpoint
-templ NamespacePicker(nameSpaces []string) {
+templ NamespacePicker(nameSpaces []string, preSelect string) {
 	{{ singleNs := len(nameSpaces) == 1 }}
 	if singleNs {
-		// When there is only one namespace, we can directly load it, and hide the namespace picker
-		<div id="namespacePicker" hx-swap-oob="true" hx-get={ "load?namespace=" + nameSpaces[0] } hx-target="#dummy" hx-indicator="#spinner" hx-trigger="load"></div>
+		// When there is only one namespace, we can directly load it
+		<div hx-swap-oob="true" hx-get={ "fetchData?namespace=" + nameSpaces[0] } hx-target="#dummy" hx-indicator="#spinner" hx-trigger="load"></div>
 	} else {
-		<select hx-get="load" name="namespace" hx-target="#dummy" hx-indicator="#spinner" id="namespaceSelect">
+		<select hx-get="fetchData" name="namespace" hx-target="#dummy" hx-indicator="#spinner" id="namespaceSelect">
 			<option disabled selected>Choose a namespace</option>
 			for _, item := range nameSpaces {
-				<option value={ item }>{ item }</option>
+				if item == preSelect {
+					<option value={ item } selected>{ item }</option>
+				} else {
+					<option value={ item }>{ item }</option>
+				}
 			}
 		</select>
-		<script>
-			setTimeout(() => {
-				const urlParams = new URLSearchParams(window.location.search)
-				if (urlParams.has('ns')) {
-					const urlNamespace = urlParams.get('ns')
-
-					if (urlNamespace) {
-						const event = new Event('change')
-						const select = document.getElementById('namespaceSelect').firstChild
-						select.value = urlNamespace
-						select.dispatchEvent(event)
-					}
-				}
-			}, 200)
-		</script>
 	}
 }
 
@@ -131,7 +120,7 @@ templ ConfigDialog(kubeHost string, ver string) {
 			</div>
 			<footer class="modal-card-foot py-3 is-flex is-justify-content-center">
 				<div class="buttons">
-					<button class="button is-success" :hx-get="`load?namespace=${namespace}`" hx-target="#dummy" hx-indicator="#spinner" hx-trigger="click" @click="save()">Save changes</button>
+					<button class="button is-success" :hx-get="`fetchData?namespace=${namespace}`" hx-target="#dummy" hx-indicator="#spinner" hx-trigger="click" @click="save()">Save changes</button>
 					<button class="button" hx-get="empty" hx-target="#dialogs">Cancel</button>
 				</div>
 			</footer>
