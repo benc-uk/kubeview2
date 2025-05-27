@@ -257,7 +257,7 @@ export function layout() {
   }).run()
 }
 
-globalThis.coseLayout = function () {
+export function coseLayout() {
   cy.layout({
     name: 'cose',
     randomize: false,

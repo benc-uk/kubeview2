@@ -9,11 +9,10 @@ import Alpine from '../ext/alpinejs.esm.min.js'
 import { getConfig, saveConfig } from './config.js'
 import { initEventStreaming } from './events.js'
 import { styleSheet } from './styles.js'
-import { addResource, processLinks, layout } from './graph.js'
+import { addResource, processLinks, layout, coseLayout } from './graph.js'
 import { showToast } from '../ext/toast.js'
 
-// These are shared variables used across the application
-// `cy` is the Cytoscape instance, `resMap` is a map of resources by their UID
+// A shared global map of resources by their UID
 export const resMap = {}
 
 // This is why we are here, Cytoscape will be used to render all the data
@@ -23,6 +22,7 @@ export const cy = cytoscape({
   style: styleSheet,
 })
 
+// Exported variable holding the current namespace
 export let currentNamespace = ''
 
 window.addEventListener('resize', function () {
@@ -30,6 +30,7 @@ window.addEventListener('resize', function () {
   cy.fit(null, 10)
 })
 
+// Component for the main application
 Alpine.data('mainApp', () => ({
   labelsShown: false,
   panelOpen: false,
@@ -49,20 +50,14 @@ Alpine.data('mainApp', () => ({
     this.errorMessage = `${info.error}, METHOD: ${info.requestConfig.verb}, PATH:${info.pathInfo.finalRequestPath}`
   },
 
-  coseLayout() {
-    cy.layout({
-      name: 'cose',
-      randomize: false,
-      numIter: 5000,
-      nodeDimensionsIncludeLabels: true,
-    }).run()
-  },
+  toolbarCoseLayout: coseLayout,
 
-  fit() {
+  toolbarFit() {
     cy.resize()
     cy.fit(null, 10)
   },
 
+  // Hook into the cytoscape instance for various events
   init() {
     cy.on('tap', 'node', (evt) => {
       const node = evt.target
@@ -109,6 +104,7 @@ Alpine.data('mainApp', () => ({
   },
 }))
 
+// Component for the configuration panel
 Alpine.data('configComponent', () => ({
   cfg: getConfig(),
   tab: 1,

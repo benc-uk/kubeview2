@@ -34,11 +34,14 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 
 	// In cluster connect using in-cluster "magic", else build config from .kube/config file
 	if inCluster() {
-		log.Println("🛠️ Running in cluster, will try to use cluster config")
+		log.Println("⚓ Running in cluster, will try to use cluster config")
 
 		kubeConfig, err = rest.InClusterConfig()
 	} else {
+		// Default location for kubeconfig file is $HOME/.kube/config
 		kubeconfigFile := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+
+		// If KUBECONFIG environment variable is set, use that instead
 		if os.Getenv("KUBECONFIG") != "" {
 			kubeconfigFile = os.Getenv("KUBECONFIG")
 		}
@@ -61,8 +64,15 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 		return nil, err
 	}
 
-	// Check connection to the cluster
-	_, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "namespaces"}).
+	namespace := coreV1.NamespaceAll // Work in all namespaces
+	if conf.SingleNamespace != "" {
+		namespace = conf.SingleNamespace
+		log.Println("🔑 Authorised for a single namespace:", namespace)
+	}
+
+	// Check connection to the cluster, by listing pods in the specified namespace (or all)
+	_, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}).
+		Namespace(namespace).
 		List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
 		log.Println("💥 Failed retrieve data from Kubernetes API:", err)
@@ -72,12 +82,6 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 	}
 
 	log.Println("👀 Setting up resource watchers...")
-
-	namespace := coreV1.NamespaceAll // Watch all namespaces
-	if conf.SingleNamespace != "" {
-		namespace = conf.SingleNamespace
-		log.Println("👀 Watching single namespace:", namespace)
-	}
 
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
 		dynamicClient, time.Minute, namespace, nil)
