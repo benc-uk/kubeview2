@@ -1,3 +1,5 @@
+//@ts-check
+
 // ==========================================================================================
 // Main JavaScript entry point for KubeView
 // Handles the main cytoscape graph and data load from the server
@@ -30,7 +32,7 @@ window.addEventListener('resize', function () {
   cy.fit(null, 10)
 })
 
-// Component for the main application
+// Alpine.js component for the main application
 Alpine.data('mainApp', () => ({
   labelsShown: false,
   panelOpen: false,
@@ -62,8 +64,13 @@ Alpine.data('mainApp', () => ({
     cy.on('tap', 'node', (evt) => {
       const node = evt.target
       if (node.data('resource')) {
+        const newPanelData = getPanelData(node.id())
+        if (!newPanelData) {
+          this.panelOpen = false
+          return
+        }
         this.panelOpen = true
-        this.panelData = getPanelData(node.id())
+        this.panelData = newPanelData
       }
     })
 
@@ -165,9 +172,10 @@ globalThis.namespaceLoaded = function (ns, data) {
 }
 
 /**
- * Show the side info panel for a resource
- * This will populate the panel with the resource data and show it
+ * For a given resource ID, this function retrieves the data to be shown in the info panel
+ * This has customized logic to present the data in a user-friendly way
  * @param {string} id - The ID of the resource to show
+ * @return {PanelData | undefined} The data to be shown in the info panel, or undefined if the resource is not found
  */
 function getPanelData(id) {
   // Find the resource in the resMap
@@ -224,6 +232,7 @@ function getPanelData(id) {
   }
 
   // Labels
+  /** @type {Record<string, string>} */
   const labels = {}
   if (res.metadata?.labels) {
     for (const [key, value] of Object.entries(res.metadata.labels)) {
@@ -231,6 +240,7 @@ function getPanelData(id) {
     }
   }
 
+  /** @type {Record<string, any>} */
   const containers = {}
   if (res.status?.containerStatuses) {
     for (const c of res.status.containerStatuses) {

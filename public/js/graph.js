@@ -1,3 +1,10 @@
+//@ts-check
+
+// ==========================================================================================
+// Handles most graph operations like adding, updating, and removing resources
+// Also processes links between resources in the Cytoscape graph
+// ==========================================================================================
+
 import { getConfig } from './config.js'
 import { cy, resMap } from './main.js'
 
@@ -5,6 +12,7 @@ const ICON_PATH = 'public/img/res'
 
 /**
  * Used to add a resource to the graph
+ * @param {Resource} res The k8s resource to add
  */
 export function addResource(res) {
   // Endpoints are stored in the resmap but not added to the graph
@@ -30,6 +38,7 @@ export function addResource(res) {
 /**
  * Used to update a resource in the graph
  * It will update the node data and the status colour
+ * @param {Resource} res The k8s resource to update
  */
 export function updateResource(res) {
   // Endpoints are stored in the resmap but not added to the graph
@@ -60,6 +69,7 @@ export function updateResource(res) {
 
 /**
  * Used remove a resource from the graph
+ * @param {Resource} res The k8s resource to remove
  */
 export function removeResource(res) {
   cy.remove('#' + res.metadata.uid)
@@ -68,6 +78,8 @@ export function removeResource(res) {
 
 /**
  * Link two nodes together
+ * @param {string} sourceId The ID of the source node
+ * @param {string} targetId The ID of the target node
  */
 export function addEdge(sourceId, targetId) {
   try {
@@ -91,6 +103,7 @@ export function addEdge(sourceId, targetId) {
 /**
  * Lots of nasty custom logic to link resources together
  * This is used to link Ingresses to Services and Services to Pods, etc.
+ * @param {Resource} res The resource to process links for
  */
 export function processLinks(res) {
   if (res.metadata.ownerReferences) {
@@ -154,6 +167,8 @@ export function processLinks(res) {
 
 /**
  * Create a node object for Cytoscape from the k8s resource
+ * @param {Resource} res The k8s resource to create a node for
+ * @returns {ResNode} The cytoscape node object to be added to the graph
  */
 function makeNode(res) {
   let label = res.metadata.name
@@ -184,6 +199,7 @@ function makeNode(res) {
 
 /**
  * Used to calculate the status colour of the resource based on its state
+ * @param {Resource} res The k8s resource to calculate the status colour for
  */
 function statusColour(res) {
   try {

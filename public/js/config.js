@@ -1,14 +1,18 @@
-/**
- * Config Object
- * @typedef {Object} Config
- * @property {boolean} debug - Enable debug mode
- * @property {boolean} shortenNames - Shorten names in the UI
- * @property {string[]} resKindFilter - Filter for resource types
- * @property {boolean} hideHelm - Hide Helm releases
- */
+//@ts-check
+
+// ==========================================================================================
+// Client-side configuration management for KubeView
+// ==========================================================================================
+
+/** @type {Config | null}*/
+let config = null
 
 /** @type {Config}*/
-let config = null
+const defaultConfig = {
+  debug: false,
+  shortenNames: true,
+  resFilter: ['Pod', 'Deployment', 'ReplicaSet', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Service', 'Ingress'],
+}
 
 /**
  * Gets the configuration object from local storage.
@@ -19,23 +23,16 @@ export function getConfig() {
 
   // Set the default client ID to a random value
   if (!localStorage.getItem('kubeviewConfig')) {
-    const cfg = {
-      debug: false,
-      shortenNames: true,
+    localStorage.setItem('kubeviewConfig', JSON.stringify(defaultConfig))
 
-      resFilter: ['Pod', 'Deployment', 'ReplicaSet', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Service', 'Ingress'],
-    }
-
-    localStorage.setItem('kubeviewConfig', JSON.stringify(cfg))
-
-    config = cfg
-    return cfg
+    config = defaultConfig
+    return config
   }
 
   // Get the config from local storage
-  const cfg = JSON.parse(localStorage.getItem('kubeviewConfig'))
+  const cfg = JSON.parse(localStorage.getItem('kubeviewConfig') || 'null')
   config = cfg
-  return cfg
+  return config || defaultConfig
 }
 
 export function saveConfig(newConfig) {

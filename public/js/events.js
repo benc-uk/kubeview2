@@ -1,6 +1,8 @@
+//@ts-check
+
 // ==========================================================================================
 // Event streaming for Kubernetes resources
-// Handles events from the server and updates the graph accordingly
+// Handles SSE events from the server and updates the graph accordingly
 // ==========================================================================================
 import { layout, removeResource, addResource, updateResource } from './graph.js'
 import { getConfig } from './config.js'
@@ -17,6 +19,7 @@ export function initEventStreaming() {
 
   // Handle resource add events from the server
   updateStream.addEventListener('add', function (event) {
+    /** @type {Resource} */
     let res
     try {
       res = JSON.parse(event.data)
@@ -35,6 +38,7 @@ export function initEventStreaming() {
 
   // Handle resource delete events from the server
   updateStream.addEventListener('delete', function (event) {
+    /** @type {Resource} */
     let res
     try {
       res = JSON.parse(event.data)
@@ -53,6 +57,7 @@ export function initEventStreaming() {
 
   // Handle resource update events from the server
   updateStream.addEventListener('update', function (event) {
+    /** @type {Resource} */
     let res
     try {
       res = JSON.parse(event.data)
@@ -71,9 +76,14 @@ export function initEventStreaming() {
   // Notify when the stream is connected
   updateStream.onopen = function () {
     console.log('📚 Event stream ready:', updateStream.readyState === 1)
-    if (updateStream.readyState === 1) {
-      document.getElementById('eventStatusIcon').classList.remove('is-warning')
-      document.getElementById('eventStatusIcon').classList.add('is-success')
+    const statusIcon = document.getElementById('eventStatusIcon')
+
+    if (updateStream.readyState === 1 && statusIcon) {
+      statusIcon.classList.remove('is-warning')
+      statusIcon.classList.add('is-success')
+    } else if (statusIcon) {
+      statusIcon.classList.remove('is-success')
+      statusIcon.classList.add('is-warning')
     }
   }
 }

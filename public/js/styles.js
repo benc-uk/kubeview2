@@ -1,6 +1,5 @@
 // ==========================================================================================
 // Style sheet for Cytoscape.js
-// This file defines the styles for nodes and edges in the Cytoscape graph
 // ==========================================================================================
 
 import cytoscape from '../ext/cytoscape.esm.min.mjs'
