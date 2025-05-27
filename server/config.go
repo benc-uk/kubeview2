@@ -3,11 +3,19 @@ package main
 import (
 	"os"
 	"strconv"
-
-	types "github.com/benc-uk/kubeview2/server/types"
 )
 
-func getConfig() types.Config {
+// Config holds the configuration for the system
+type Config struct {
+	Port            int
+	NameSpaceFilter string
+	SingleNamespace string
+}
+
+// Parse the environment variables and return a Config struct
+// Also provides default values if the environment variables are not set
+func getConfig() Config {
+	// Default values
 	port := 8000
 	nameSpaceFilter := ""
 	singleNamespace := ""
@@ -26,7 +34,7 @@ func getConfig() types.Config {
 		nameSpaceFilter = s
 	}
 
-	return types.Config{
+	return Config{
 		Port:            port,
 		NameSpaceFilter: nameSpaceFilter,
 		SingleNamespace: singleNamespace,

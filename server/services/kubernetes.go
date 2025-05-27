@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/benc-uk/kubeview2/server/types"
-
 	"github.com/benc-uk/go-rest-api/pkg/sse"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,12 +20,35 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// Kubernetes is a service that connects to a Kubernetes cluster and provides access to its resources
 type Kubernetes struct {
 	client      *dynamic.DynamicClient
 	ClusterHost string
 }
 
-func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*Kubernetes, error) {
+// This is used by the SSE broker to send events to connected clients
+type KubeEvent struct {
+	// EventType is the type of event, e.g. "add", "update", "delete" or "ping"
+	EventType EventTypeEnum
+	// Object is the Kubernetes resource that triggered the event
+	Object *unstructured.Unstructured
+}
+
+// EventTypeEnum is an enum for the type of event
+type EventTypeEnum string
+
+const (
+	// AddEvent is triggered when a resource is added
+	AddEvent EventTypeEnum = "add"
+	// UpdateEvent is triggered when a resource is updated
+	UpdateEvent EventTypeEnum = "update"
+	// DeleteEvent is triggered when a resource is deleted
+	DeleteEvent EventTypeEnum = "delete"
+	// PingEvent is a heartbeat event to keep the connection alive
+	PingEvent EventTypeEnum = "ping"
+)
+
+func NewKubernetes(sseBroker *sse.Broker[KubeEvent], singleNamespace string) (*Kubernetes, error) {
 	var kubeConfig *rest.Config
 
 	var err error
@@ -65,8 +86,8 @@ func NewKubernetes(sseBroker *sse.Broker[types.KubeEvent], conf types.Config) (*
 	}
 
 	namespace := coreV1.NamespaceAll // Work in all namespaces
-	if conf.SingleNamespace != "" {
-		namespace = conf.SingleNamespace
+	if singleNamespace != "" {
+		namespace = singleNamespace
 		log.Println("🔑 Authorised for a single namespace:", namespace)
 	}
 
@@ -223,13 +244,13 @@ func inCluster() bool {
 	return false
 }
 
-func getHandlerFuncs(b *sse.Broker[types.KubeEvent]) cache.ResourceEventHandlerFuncs {
+func getHandlerFuncs(b *sse.Broker[KubeEvent]) cache.ResourceEventHandlerFuncs {
 	return cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			u := obj.(*unstructured.Unstructured)
 			u.SetManagedFields(nil)
-			b.SendToAll(types.KubeEvent{
-				EventType: "add",
+			b.SendToAll(KubeEvent{
+				EventType: AddEvent,
 				Object:    u,
 			})
 		},
@@ -237,8 +258,8 @@ func getHandlerFuncs(b *sse.Broker[types.KubeEvent]) cache.ResourceEventHandlerF
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			u := newObj.(*unstructured.Unstructured)
 			u.SetManagedFields(nil)
-			b.SendToAll(types.KubeEvent{
-				EventType: "update",
+			b.SendToAll(KubeEvent{
+				EventType: UpdateEvent,
 				Object:    u,
 			})
 		},
@@ -246,8 +267,8 @@ func getHandlerFuncs(b *sse.Broker[types.KubeEvent]) cache.ResourceEventHandlerF
 		DeleteFunc: func(obj interface{}) {
 			u := obj.(*unstructured.Unstructured)
 			u.SetManagedFields(nil)
-			b.SendToAll(types.KubeEvent{
-				EventType: "delete",
+			b.SendToAll(KubeEvent{
+				EventType: DeleteEvent,
 				Object:    u,
 			})
 		},

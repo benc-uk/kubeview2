@@ -1,7 +1,5 @@
 package templates
 
-import "github.com/benc-uk/kubeview2/server/types"
-
 // This is rendered once the list of namespaces is loaded from /namespaces endpoint
 templ NamespacePicker(nameSpaces []string) {
 	{{ singleNs := len(nameSpaces) == 1 }}
@@ -35,7 +33,7 @@ templ NamespacePicker(nameSpaces []string) {
 
 // This is rendered when the /load endpoint is hit and the namespace is selected
 // It will pass the namespace data to the client side to be rendered in the main view
-templ PassNamespaceData(ns string, data types.NamespaceData) {
+templ PassNamespaceData(ns string, data NamespaceData) {
 	<div id="welcome" hx-swap-oob="true" class="is-hidden"></div>
 	<div id="dialogs" hx-swap-oob="true"></div>
 	// This is almost true magic

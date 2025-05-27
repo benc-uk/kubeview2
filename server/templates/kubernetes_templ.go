@@ -8,8 +8,6 @@ package templates
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/benc-uk/kubeview2/server/types"
-
 // This is rendered once the list of namespaces is loaded from /namespaces endpoint
 func NamespacePicker(nameSpaces []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -41,7 +39,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs("load?namespace=" + nameSpaces[0])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 10, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 8, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -64,7 +62,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(item)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 15, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 13, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -77,7 +75,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(item)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 15, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/kubernetes.templ`, Line: 13, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -99,7 +97,7 @@ func NamespacePicker(nameSpaces []string) templ.Component {
 
 // This is rendered when the /load endpoint is hit and the namespace is selected
 // It will pass the namespace data to the client side to be rendered in the main view
-func PassNamespaceData(ns string, data types.NamespaceData) templ.Component {
+func PassNamespaceData(ns string, data NamespaceData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

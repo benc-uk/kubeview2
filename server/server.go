@@ -10,21 +10,23 @@ import (
 	"github.com/benc-uk/go-rest-api/pkg/sse"
 	"github.com/benc-uk/kubeview2/server/services"
 	"github.com/benc-uk/kubeview2/server/templates"
-	"github.com/benc-uk/kubeview2/server/types"
 	"github.com/go-chi/chi/v5"
 )
 
+// server represents the main application server, and holds every together
 type server struct {
 	healthy     bool
 	kubeService *services.Kubernetes
-	config      types.Config
+	config      Config
 	version     string
 }
 
-func NewServer(r *chi.Mux, conf types.Config, ver string) *server {
-	sseBroker := sse.NewBroker[types.KubeEvent]()
+// Create a new server instance with the provided router, configuration, and version.
+func NewServer(r *chi.Mux, conf Config, ver string) *server {
+	// This is the SSE broker that will handle streaming events to connected clients
+	sseBroker := sse.NewBroker[services.KubeEvent]()
 
-	sseBroker.MessageAdapter = func(ke types.KubeEvent, clientID string) sse.SSE {
+	sseBroker.MessageAdapter = func(ke services.KubeEvent, clientID string) sse.SSE {
 		json, err := json.Marshal(ke.Object)
 		if err != nil {
 			log.Printf("💩 Error marshalling object: %v", err)
@@ -37,27 +39,28 @@ func NewServer(r *chi.Mux, conf types.Config, ver string) *server {
 
 		return sse.SSE{
 			Data:  string(json),
-			Event: ke.EventType,
+			Event: string(ke.EventType),
 		}
 	}
 
-	// Start a heartbeat to keep the connection alive, sent to all clients
+	// Start a SSE heartbeat to keep the connection alive, sent to all clients
 	go func() {
 		for {
-			sseBroker.SendToAll(types.KubeEvent{
-				EventType: "ping",
+			sseBroker.SendToAll(services.KubeEvent{
+				EventType: services.PingEvent,
 				Object:    nil,
 			})
 			time.Sleep(10 * time.Second)
 		}
 	}()
 
-	ks, err := services.NewKubernetes(sseBroker, conf)
+	// Create a new Kubernetes service instance, which will connect to the cluster
+	ks, err := services.NewKubernetes(sseBroker, conf.SingleNamespace)
 	if err != nil {
 		log.Fatalf("💩 Unable to connect to Kubernetes. The KubeView will exit")
 	}
 
-	s := &server{
+	srv := &server{
 		healthy:     true,
 		kubeService: ks,
 		config:      conf,
@@ -70,12 +73,12 @@ func NewServer(r *chi.Mux, conf types.Config, ver string) *server {
 	})
 
 	// App routes
-	r.Get("/", s.index)                        // Serve the index page
-	r.Get("/namespaces", s.fetchNamespaceList) // Return a list of namespaces
-	r.Get("/load", s.loadNamespace)            // Load resources in a namespace and return the data
-	r.Get("/showConfig", s.showConfig)         // Load resources in a namespace and return the data
-	r.Get("/empty", s.empty)                   // Empty response for removing elements on the page
-	r.Get("/health", s.healthCheck)
+	r.Get("/", srv.index)
+	r.Get("/namespaces", srv.fetchNamespaceList)
+	r.Get("/load", srv.loadNamespace)
+	r.Get("/showConfig", srv.showConfig)
+	r.Get("/empty", srv.empty)
+	r.Get("/health", srv.healthCheck)
 
 	// Special route for SSE streaming events to connected clients
 	r.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
@@ -94,9 +97,10 @@ func NewServer(r *chi.Mux, conf types.Config, ver string) *server {
 		}
 	})
 
-	return s
+	return srv
 }
 
+// HTTP handler for the main app index page
 func (s *server) index(w http.ResponseWriter, r *http.Request) {
 	err := templates.Index().Render(r.Context(), w)
 	if err != nil {
@@ -104,6 +108,7 @@ func (s *server) index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// HTTP handler to show the configuration dialog
 func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
 	err := templates.ConfigDialog(s.kubeService.ClusterHost, s.version).Render(r.Context(), w)
 	if err != nil {
@@ -111,6 +116,7 @@ func (s *server) showConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// HTTP handler to fetch the list of namespaces from the Kubernetes cluster
 func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 	log.Println("🔍 Fetching list of namespaces")
 
@@ -143,12 +149,14 @@ func (s *server) fetchNamespaceList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Render the namespace picker (HTML <select>) template with the list of namespaces
 	err = templates.NamespacePicker(nsList).Render(r.Context(), w)
 	if err != nil {
 		s.return500(w)
 	}
 }
 
+// HTTP handler to gather all resources in a namespace and return the data
 func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	ns := r.URL.Query().Get("namespace")
 	log.Println("🍵 Fetching resources in", ns)
@@ -174,11 +182,13 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// HTTP handler for an empty response, used to remove elements on the page
 func (s *server) empty(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(""))
 }
 
+// HTTP handler for health check endpoint
 func (s *server) healthCheck(w http.ResponseWriter, r *http.Request) {
 	if s.healthy {
 		w.WriteHeader(http.StatusOK)
@@ -189,6 +199,7 @@ func (s *server) healthCheck(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// return500 is a helper function to return a 500 Internal Server Error response
 func (s *server) return500(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 	_, _ = w.Write([]byte("Internal Server Error"))
