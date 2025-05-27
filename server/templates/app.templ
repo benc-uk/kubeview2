@@ -1,5 +1,52 @@
 package templates
 
+// ==========================================================================================
+// Templates for all app HTMX fragments
+// Many of these are served
+// ==========================================================================================
+
+// This is fragment is rendered once the list of namespaces is loaded from /namespaces endpoint
+templ NamespacePicker(nameSpaces []string) {
+	{{ singleNs := len(nameSpaces) == 1 }}
+	if singleNs {
+		// When there is only one namespace, we can directly load it, and hide the namespace picker
+		<div id="namespacePicker" hx-swap-oob="true" hx-get={ "load?namespace=" + nameSpaces[0] } hx-target="#dummy" hx-indicator="#spinner" hx-trigger="load"></div>
+	} else {
+		<select hx-get="load" name="namespace" hx-target="#dummy" hx-indicator="#spinner" id="namespaceSelect">
+			<option disabled selected>Choose a namespace</option>
+			for _, item := range nameSpaces {
+				<option value={ item }>{ item }</option>
+			}
+		</select>
+		<script>
+			setTimeout(() => {
+				const urlParams = new URLSearchParams(window.location.search)
+				if (urlParams.has('ns')) {
+					const urlNamespace = urlParams.get('ns')
+
+					if (urlNamespace) {
+						const event = new Event('change')
+						const select = document.getElementById('namespaceSelect').firstChild
+						select.value = urlNamespace
+						select.dispatchEvent(event)
+					}
+				}
+			}, 200)
+		</script>
+	}
+}
+
+// This is rendered when the /load endpoint is hit and the namespace is selected
+// It will pass the namespace data to the client side to be rendered in the main view
+templ PassNamespaceData(ns string, data NamespaceData) {
+	<div id="welcome" hx-swap-oob="true" class="is-hidden"></div>
+	<div id="dialogs" hx-swap-oob="true"></div>
+	// This is sorta magic
+	// Calls a JS function, on the client side, how? Don't ask...
+	@templ.JSFuncCall("namespaceLoaded", ns, data)
+}
+
+// This is rendered from the /config endpoint
 templ ConfigDialog(kubeHost string, ver string) {
 	<div
 		class="modal is-active"

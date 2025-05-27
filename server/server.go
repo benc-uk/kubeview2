@@ -1,3 +1,8 @@
+// ==========================================================================================
+// The server is an abstraction that holds a bunch of stuff into one place.
+// It handles the main routes, SSE streaming, and Kubernetes interactions
+// ==========================================================================================
+
 package main
 
 import (
