@@ -199,6 +199,14 @@ function getPanelData(id) {
   }
   if (res.spec?.ipFamilies) props.ipVersions = res.spec.ipFamilies.join(', ')
   if (res.spec?.serviceAccount) props.serviceAccount = res.spec.serviceAccount
+  if (res.spec?.ingressClassName) props.ingressClass = res.spec.ingressClassName
+  if (res.spec?.rules) {
+    props.hosts = res.spec.rules
+      .map((rule) => {
+        return rule.host ? rule.host : '<no host>'
+      })
+      .join(', ')
+  }
 
   if (res.status?.podIP) props.podIP = res.status.podIP
   if (res.status?.hostIP) props.hostIP = res.status.hostIP
