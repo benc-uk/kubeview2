@@ -163,6 +163,19 @@ export function processLinks(res) {
       }
     }
   }
+
+  // Try to link a pod with a volume claim to the PVC
+  if (res.kind === 'Pod' && res.spec?.volumes) {
+    for (const volume of res.spec.volumes) {
+      if (volume.persistentVolumeClaim && volume.persistentVolumeClaim.claimName) {
+        const pvc = cy.$(`node[kind = "PersistentVolumeClaim"][label = "${volume.persistentVolumeClaim.claimName}"]`)
+        if (pvc.length > 0) {
+          if (getConfig().debug) console.log(`🔗 Linking Pod ${res.metadata.name} to PVC ${volume.persistentVolumeClaim.claimName}`)
+          addEdge(res.metadata.uid, pvc.id())
+        }
+      }
+    }
+  }
 }
 
 /**
