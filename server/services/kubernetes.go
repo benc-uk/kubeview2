@@ -149,7 +149,8 @@ func NewKubernetes(sseBroker *sse.Broker[KubeEvent], singleNamespace string) (*K
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 
-	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "persistentvolumeclaims"}).
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "",
+		Version: "v1", Resource: "persistentvolumeclaims"}).
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 
