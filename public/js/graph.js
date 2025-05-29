@@ -250,6 +250,18 @@ function statusColour(res) {
       if (res.status.phase === 'Pending') return 'grey'
       return 'red'
     }
+
+    if (res.kind === 'Job') {
+      const backoffLimit = res.spec.backoffLimit || 6
+      const succeeded = res.status?.succeeded || 0
+      const completions = res.spec?.completions || 1 // Default to 1 if not set
+      const failed = res.status?.failed || 0
+
+      if (succeeded >= completions) return 'green'
+      if (failed >= backoffLimit) return 'red'
+
+      return 'grey'
+    }
   } catch (e) {
     console.error('💥 Error calculating status colour:', e)
     return ''
@@ -267,7 +279,7 @@ export function layout() {
   cy.layout({
     name: 'breadthfirst',
     directed: true,
-    roots: cy.nodes('[kind = "Ingress"],[kind = "Deployment"],[kind = "DaemonSet"],[kind = "StatefulSet"]'),
+    roots: cy.nodes('[kind = "Ingress"],[kind = "Deployment"],[kind = "DaemonSet"],[kind = "StatefulSet"],[kind = "Job"]'),
     nodeDimensionsIncludeLabels: true,
     spacingFactor: 1,
   }).run()

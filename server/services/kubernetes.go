@@ -141,6 +141,14 @@ func NewKubernetes(sseBroker *sse.Broker[KubeEvent], singleNamespace string) (*K
 		Informer().
 		AddEventHandler(getHandlerFuncs(sseBroker))
 
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}).
+		Informer().
+		AddEventHandler(getHandlerFuncs(sseBroker))
+
+	_, _ = factory.ForResource(schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "cronjobs"}).
+		Informer().
+		AddEventHandler(getHandlerFuncs(sseBroker))
+
 	factory.Start(context.Background().Done())
 	factory.WaitForCacheSync(context.Background().Done())
 

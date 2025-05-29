@@ -207,12 +207,18 @@ function getPanelData(id) {
       })
       .join(', ')
   }
+  if (res.spec?.completions !== undefined) props.completions = res.spec.completions
+  if (res.spec?.parallelism !== undefined) props.parallelism = res.spec.parallelism
+  if (res.spec?.backoffLimit !== undefined) props.backoffLimit = res.spec.backoffLimit
+  if (res.spec?.successfulJobsHistoryLimit !== undefined) props.successHistory = res.spec.successfulJobsHistoryLimit
+  if (res.spec?.failedJobsHistoryLimit !== undefined) props.failedHistory = res.spec.failedJobsHistoryLimit
+  if (res.spec?.schedule !== undefined) props.scheduled = res.spec.schedule
 
   if (res.status?.podIP) props.podIP = res.status.podIP
   if (res.status?.hostIP) props.hostIP = res.status.hostIP
   if (res.status?.phase) props.phase = res.status.phase
-  if (res.status?.readyReplicas) props.replicasReady = res.status.readyReplicas
-  if (res.status?.availableReplicas) props.replicasAvailable = res.status.availableReplicas
+  if (res.status?.readyReplicas !== undefined) props.replicasReady = res.status.readyReplicas
+  if (res.status?.availableReplicas !== undefined) props.replicasAvailable = res.status.availableReplicas
   if (res.status?.conditions) {
     for (const cond of res.status.conditions || []) {
       if (cond.type === 'Ready') {
@@ -231,6 +237,12 @@ function getPanelData(id) {
       props.loadBalancer = res.status.loadBalancer.ingress.map((ingress) => ingress.ip || ingress.hostname).join(', ')
     }
   }
+  // if (res.status?.active !== undefined) props.active = res.status.active
+  if (res.status?.ready !== undefined) props.ready = res.status.ready
+  if (res.status?.succeeded !== undefined) props.succeeded = res.status.succeeded
+  if (res.status?.failed !== undefined) props.failed = res.status.failed
+  if (res.status?.lastScheduleTime) props.lastScheduleTime = res.status.lastScheduleTime
+  if (res.status?.lastSuccessfulTime) props.lastSuccessfulTime = res.status.lastSuccessfulTime
 
   // ConfigMap and Secret data
   if (res.data) {
