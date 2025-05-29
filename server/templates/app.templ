@@ -9,8 +9,12 @@ package templates
 templ NamespacePicker(nameSpaces []string, preSelect string) {
 	{{ singleNs := len(nameSpaces) == 1 }}
 	if singleNs {
+		<script>
+		// I battled for hours to find a better way to do this with hx-on events, there isn't one
+		document.getElementById("namespaceField").innerText = 'Namespace: {{ nameSpaces[0] }}';
+		</script>
 		// When there is only one namespace, we can directly load it
-		<div hx-get={ "fetchData?namespace=" + nameSpaces[0] } hx-target="closest .field" hx-indicator="#spinner" hx-trigger="load"></div>
+		<div hx-get={ "fetchData?namespace=" + nameSpaces[0] } hx-target="#dummy" hx-indicator="#spinner" hx-trigger="load"></div>
 	} else {
 		<select hx-get="fetchData" name="namespace" hx-target="#dummy" hx-indicator="#spinner" id="namespaceSelect">
 			<option disabled selected>Choose a namespace</option>
@@ -78,20 +82,23 @@ templ ConfigDialog(kubeHost string, ver string) {
 					<div :class="{'is-hidden':tab!=2}">
 						<label class="label">Resource Filters (Hold Ctrl to select multiple)</label>
 						<div class="field">
-							<div class="select is-multiple">
+							<div class="select is-multiple is-success is-fullwidth">
 								<select multiple size="6" x-model="cfg.resFilter">
+									<option disabled>• Pods & Deployments:</option>
 									<option value="Pod" :selected="cfg.resFilter.includes('Pod')">Pods</option>
-									<option value="Service" :selected="cfg.resFilter.includes('Service')">Services</option>
 									<option value="Deployment" :selected="cfg.resFilter.includes('Deployment')">Deployments</option>
 									<option value="StatefulSet" :selected="cfg.resFilter.includes('StatefulSet')">StatefulSets</option>
 									<option value="DaemonSet" :selected="cfg.resFilter.includes('DaemonSet')">DaemonSets</option>
 									<option value="ReplicaSet" :selected="cfg.resFilter.includes('ReplicaSet')">ReplicaSets</option>
-									<option value="Job" :selected="cfg.resFilter.includes('Job')">Jobs</option>
-									<option value="CronJob" :selected="cfg.resFilter.includes('CronJob')">CronJobs</option>
+									<option disabled>• Networking:</option>
+									<option value="Service" :selected="cfg.resFilter.includes('Service')">Services</option>
 									<option value="Ingress" :selected="cfg.resFilter.includes('Ingress')">Ingress</option>
+									<option disabled>• Config & Secrets:</option>
 									<option value="ConfigMap" :selected="cfg.resFilter.includes('ConfigMap')">ConfigMaps</option>
 									<option value="Secret" :selected="cfg.resFilter.includes('Secret')">Secrets</option>
-									<option value="PersistentVolume" :selected="cfg.resFilter.includes('PersistentVolume')">PersistentVolumes</option>
+									<option disabled>• Other Resources:</option>
+									<option value="Job" :selected="cfg.resFilter.includes('Job')">Jobs</option>
+									<option value="CronJob" :selected="cfg.resFilter.includes('CronJob')">CronJobs</option>
 									<option value="PersistentVolumeClaim" :selected="cfg.resFilter.includes('PersistentVolumeClaim')">PersistentVolumeClaims</option>
 								</select>
 							</div>

@@ -11,7 +11,20 @@ let config = null
 const defaultConfig = {
   debug: false,
   shortenNames: true,
-  resFilter: ['Pod', 'Deployment', 'ReplicaSet', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Service', 'Ingress'],
+  resFilter: [
+    'Pod',
+    'Deployment',
+    'ReplicaSet',
+    'StatefulSet',
+    'DaemonSet',
+    'Job',
+    'CronJob',
+    'Service',
+    'Ingress',
+    'ConfigMap',
+    'Secret',
+    'PersistentVolumeClaim',
+  ],
 }
 
 /**

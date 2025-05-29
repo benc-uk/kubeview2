@@ -37,94 +37,106 @@ func NamespacePicker(nameSpaces []string, preSelect string) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		singleNs := len(nameSpaces) == 1
 		if singleNs {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div hx-get=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script>\n\t\t// I battled for hours to find a better way to do this with hx-on events, there isn't one\n\t\tdocument.getElementById(\"namespaceField\").innerText = 'Namespace: ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs("fetchData?namespace=" + nameSpaces[0])
+			templ_7745c5c3_Var2, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(nameSpaces[0])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 13, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 14, Col: 84}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-target=\"closest .field\" hx-indicator=\"#spinner\" hx-trigger=\"load\"></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "';\n\t\t</script>  <div hx-get=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("fetchData?namespace=" + nameSpaces[0])
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 17, Col: 54}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" hx-trigger=\"load\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<select hx-get=\"fetchData\" name=\"namespace\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" id=\"namespaceSelect\"><option disabled selected>Choose a namespace</option> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<select hx-get=\"fetchData\" name=\"namespace\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" id=\"namespaceSelect\"><option disabled selected>Choose a namespace</option> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, item := range nameSpaces {
 				if item == preSelect {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<option value=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var3 string
-					templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(item)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 19, Col: 25}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" selected>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<option value=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var4 string
 					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(item)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 19, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 23, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</option>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<option value=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" selected>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(item)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 21, Col: 25}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 23, Col: 43}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</option>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<option value=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(item)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 21, Col: 34}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 25, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</option>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var7 string
+					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(item)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 25, Col: 34}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</option>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</select>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</select>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -151,12 +163,12 @@ func PassNamespaceData(ns string, data NamespaceData) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div id=\"welcome\" hx-swap-oob=\"true\" class=\"is-hidden\"></div><div id=\"dialogs\" hx-swap-oob=\"true\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div id=\"welcome\" hx-swap-oob=\"true\" class=\"is-hidden\"></div><div id=\"dialogs\" hx-swap-oob=\"true\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -185,38 +197,38 @@ func ConfigDialog(kubeHost string, ver string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var8 == nil {
-			templ_7745c5c3_Var8 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"modal is-active\" x-data=\"configComponent\"><div class=\"modal-background\"></div><div class=\"modal-card better-shad\"><header class=\"modal-card-head has-background-primary py-3\"><p class=\"modal-card-title has-text-black\">Settings</p><button class=\"delete\" aria-label=\"close\" hx-get=\"empty\" hx-target=\"#dialogs\"></button></header><div class=\"modal-content dark-blur\" style=\"min-height: 330px\"><section class=\"my-2 mx-2\"><div class=\"tabs\"><ul><li :class=\"{&#39;is-active&#39;:tab==1}\" @click=\"tab=1\"><a>General</a></li><li :class=\"{&#39;is-active&#39;:tab==2}\" @click=\"tab=2\"><a>Filters</a></li><li :class=\"{&#39;is-active&#39;:tab==3}\" @click=\"tab=3\"><a>About</a></li></ul></div></section><section class=\"mx-5 my-3\"><div :class=\"{&#39;is-hidden&#39;:tab!=1}\"><label class=\"label\">Options</label><div class=\"field\"><label class=\"checkbox\"><input type=\"checkbox\" x-model=\"cfg.shortenNames\"> Shorten Names</label><p class=\"help\">Removes hash details from Pod & ReplicaSet names</p></div><div class=\"field mt-4\"><label class=\"checkbox\"><input type=\"checkbox\" x-model=\"cfg.debug\"> Debug</label><p class=\"help\">Extra logging in the console</p></div></div><div :class=\"{&#39;is-hidden&#39;:tab!=2}\"><label class=\"label\">Resource Filters (Hold Ctrl to select multiple)</label><div class=\"field\"><div class=\"select is-multiple\"><select multiple size=\"6\" x-model=\"cfg.resFilter\"><option value=\"Pod\" :selected=\"cfg.resFilter.includes(&#39;Pod&#39;)\">Pods</option> <option value=\"Service\" :selected=\"cfg.resFilter.includes(&#39;Service&#39;)\">Services</option> <option value=\"Deployment\" :selected=\"cfg.resFilter.includes(&#39;Deployment&#39;)\">Deployments</option> <option value=\"StatefulSet\" :selected=\"cfg.resFilter.includes(&#39;StatefulSet&#39;)\">StatefulSets</option> <option value=\"DaemonSet\" :selected=\"cfg.resFilter.includes(&#39;DaemonSet&#39;)\">DaemonSets</option> <option value=\"ReplicaSet\" :selected=\"cfg.resFilter.includes(&#39;ReplicaSet&#39;)\">ReplicaSets</option> <option value=\"Job\" :selected=\"cfg.resFilter.includes(&#39;Job&#39;)\">Jobs</option> <option value=\"CronJob\" :selected=\"cfg.resFilter.includes(&#39;CronJob&#39;)\">CronJobs</option> <option value=\"Ingress\" :selected=\"cfg.resFilter.includes(&#39;Ingress&#39;)\">Ingress</option> <option value=\"ConfigMap\" :selected=\"cfg.resFilter.includes(&#39;ConfigMap&#39;)\">ConfigMaps</option> <option value=\"Secret\" :selected=\"cfg.resFilter.includes(&#39;Secret&#39;)\">Secrets</option> <option value=\"PersistentVolume\" :selected=\"cfg.resFilter.includes(&#39;PersistentVolume&#39;)\">PersistentVolumes</option> <option value=\"PersistentVolumeClaim\" :selected=\"cfg.resFilter.includes(&#39;PersistentVolumeClaim&#39;)\">PersistentVolumeClaims</option></select></div></div></div><div :class=\"{&#39;is-hidden&#39;:tab!=3}\"><div class=\"field\"><label class=\"label\">Kubernetes Cluster</label><p>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(kubeHost)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 103, Col: 20}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></div><div class=\"field\"><label class=\"label\">Version</label><p>v")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"modal is-active\" x-data=\"configComponent\"><div class=\"modal-background\"></div><div class=\"modal-card better-shad\"><header class=\"modal-card-head has-background-primary py-3\"><p class=\"modal-card-title has-text-black\">Settings</p><button class=\"delete\" aria-label=\"close\" hx-get=\"empty\" hx-target=\"#dialogs\"></button></header><div class=\"modal-content dark-blur\" style=\"min-height: 330px\"><section class=\"my-2 mx-2\"><div class=\"tabs\"><ul><li :class=\"{&#39;is-active&#39;:tab==1}\" @click=\"tab=1\"><a>General</a></li><li :class=\"{&#39;is-active&#39;:tab==2}\" @click=\"tab=2\"><a>Filters</a></li><li :class=\"{&#39;is-active&#39;:tab==3}\" @click=\"tab=3\"><a>About</a></li></ul></div></section><section class=\"mx-5 my-3\"><div :class=\"{&#39;is-hidden&#39;:tab!=1}\"><label class=\"label\">Options</label><div class=\"field\"><label class=\"checkbox\"><input type=\"checkbox\" x-model=\"cfg.shortenNames\"> Shorten Names</label><p class=\"help\">Removes hash details from Pod & ReplicaSet names</p></div><div class=\"field mt-4\"><label class=\"checkbox\"><input type=\"checkbox\" x-model=\"cfg.debug\"> Debug</label><p class=\"help\">Extra logging in the console</p></div></div><div :class=\"{&#39;is-hidden&#39;:tab!=2}\"><label class=\"label\">Resource Filters (Hold Ctrl to select multiple)</label><div class=\"field\"><div class=\"select is-multiple is-success is-fullwidth\"><select multiple size=\"6\" x-model=\"cfg.resFilter\"><option disabled>• Pods & Deployments:</option> <option value=\"Pod\" :selected=\"cfg.resFilter.includes(&#39;Pod&#39;)\">Pods</option> <option value=\"Deployment\" :selected=\"cfg.resFilter.includes(&#39;Deployment&#39;)\">Deployments</option> <option value=\"StatefulSet\" :selected=\"cfg.resFilter.includes(&#39;StatefulSet&#39;)\">StatefulSets</option> <option value=\"DaemonSet\" :selected=\"cfg.resFilter.includes(&#39;DaemonSet&#39;)\">DaemonSets</option> <option value=\"ReplicaSet\" :selected=\"cfg.resFilter.includes(&#39;ReplicaSet&#39;)\">ReplicaSets</option> <option disabled>• Networking:</option> <option value=\"Service\" :selected=\"cfg.resFilter.includes(&#39;Service&#39;)\">Services</option> <option value=\"Ingress\" :selected=\"cfg.resFilter.includes(&#39;Ingress&#39;)\">Ingress</option> <option disabled>• Config & Secrets:</option> <option value=\"ConfigMap\" :selected=\"cfg.resFilter.includes(&#39;ConfigMap&#39;)\">ConfigMaps</option> <option value=\"Secret\" :selected=\"cfg.resFilter.includes(&#39;Secret&#39;)\">Secrets</option> <option disabled>• Other Resources:</option> <option value=\"Job\" :selected=\"cfg.resFilter.includes(&#39;Job&#39;)\">Jobs</option> <option value=\"CronJob\" :selected=\"cfg.resFilter.includes(&#39;CronJob&#39;)\">CronJobs</option> <option value=\"PersistentVolumeClaim\" :selected=\"cfg.resFilter.includes(&#39;PersistentVolumeClaim&#39;)\">PersistentVolumeClaims</option></select></div></div></div><div :class=\"{&#39;is-hidden&#39;:tab!=3}\"><div class=\"field\"><label class=\"label\">Kubernetes Cluster</label><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(ver)
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(kubeHost)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 107, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 110, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</p></div><div class=\"field\"><label class=\"label\">Project</label> <a class=\"button is-dark\" href=\"https://github.com/benc-uk/kubeview2\" target=\"_blank\"><span class=\"icon\"><i class=\"fab fa-github\"></i></span> <span>github.com/benc-uk/kubeview2</span></a></div></div></section></div><footer class=\"modal-card-foot py-3 is-flex is-justify-content-center\"><div class=\"buttons\"><button class=\"button is-success\" :hx-get=\"`fetchData?namespace=${namespace}`\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" hx-trigger=\"click\" @click=\"save()\">Save changes</button> <button class=\"button\" hx-get=\"empty\" hx-target=\"#dialogs\">Cancel</button></div></footer></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</p></div><div class=\"field\"><label class=\"label\">Version</label><p>v")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(ver)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `server/templates/app.templ`, Line: 114, Col: 16}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</p></div><div class=\"field\"><label class=\"label\">Project</label> <a class=\"button is-dark\" href=\"https://github.com/benc-uk/kubeview2\" target=\"_blank\"><span class=\"icon\"><i class=\"fab fa-github\"></i></span> <span>github.com/benc-uk/kubeview2</span></a></div></div></section></div><footer class=\"modal-card-foot py-3 is-flex is-justify-content-center\"><div class=\"buttons\"><button class=\"button is-success\" :hx-get=\"`fetchData?namespace=${namespace}`\" hx-target=\"#dummy\" hx-indicator=\"#spinner\" hx-trigger=\"click\" @click=\"save()\">Save changes</button> <button class=\"button\" hx-get=\"empty\" hx-target=\"#dialogs\">Cancel</button></div></footer></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

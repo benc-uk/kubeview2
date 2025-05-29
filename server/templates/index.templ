@@ -6,10 +6,12 @@ templ Index(urlNamespace string) {
 			@htmlHeader()
 		</head>
 		<body x-data="mainApp">
+			<!-- This is the main entry point for the KubeView application -->
 			<input type="hidden" name="namespace" value={ urlNamespace }/>
 			if urlNamespace != "" {
 				<div hx-get="fetchData" hx-include="[name='namespace']" hx-indicator="#spinner" hx-trigger="load"></div>
 			}
+			<div hx-get="namespaces" hx-include="[name='namespace']" hx-trigger="load" hx-target="#namespaceSelect" hx-indicator="#spinner"></div>
 			<nav class="navbar is-dark" role="navigation" @htmx:error="htmxError(event)">
 				<div class="navbar-brand">
 					<a class="navbar-item" href="/">
@@ -21,14 +23,14 @@ templ Index(urlNamespace string) {
 					<div class="navbar-start">
 						<div class="navbar-item">
 							<form>
-								<div class="field">
+								<div class="field" id="namespaceField">
 									<!-- This HTMX request starts everything -->
-									<div class="select" hx-get="namespaces" hx-include="[name='namespace']" hx-trigger="load" id="namespaceSelect">
+									<div id="namespaceSelect" class="select is-primary">
 										<select>
 											<option value="" selected disabled>🔃 Loading...</option>
 										</select>
 									</div>
-									<button class="button is-link" hx-get="namespaces" hx-target="#namespaceSelect" hx-indicator="#spinner">
+									<button class="button is-link" type="button" onclick="window.location.reload()">
 										<span class="icon"><i class="fas fa-rotate"></i></span>
 									</button>
 								</div>
