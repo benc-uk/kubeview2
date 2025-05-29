@@ -10,7 +10,7 @@ templ NamespacePicker(nameSpaces []string, preSelect string) {
 	{{ singleNs := len(nameSpaces) == 1 }}
 	if singleNs {
 		// When there is only one namespace, we can directly load it
-		<div hx-swap-oob="true" hx-get={ "fetchData?namespace=" + nameSpaces[0] } hx-target="#dummy" hx-indicator="#spinner" hx-trigger="load"></div>
+		<div hx-get={ "fetchData?namespace=" + nameSpaces[0] } hx-target="closest .field" hx-indicator="#spinner" hx-trigger="load"></div>
 	} else {
 		<select hx-get="fetchData" name="namespace" hx-target="#dummy" hx-indicator="#spinner" id="namespaceSelect">
 			<option disabled selected>Choose a namespace</option>

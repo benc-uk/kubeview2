@@ -34,7 +34,7 @@ func NewServer(r *chi.Mux, conf Config, ver string) *server {
 	sseBroker.MessageAdapter = func(ke services.KubeEvent, clientID string) sse.SSE {
 		json, err := json.Marshal(ke.Object)
 		if err != nil {
-			log.Printf("💩 Error marshalling object: %v", err)
+			log.Printf("💥 Error marshalling object: %v", err)
 
 			return sse.SSE{
 				Data:  "Error marshalling object",
@@ -62,7 +62,7 @@ func NewServer(r *chi.Mux, conf Config, ver string) *server {
 	// Create a new Kubernetes service instance, which will connect to the cluster
 	ks, err := services.NewKubernetes(sseBroker, conf.SingleNamespace)
 	if err != nil {
-		log.Fatalf("💩 Unable to connect to Kubernetes. The KubeView will exit")
+		log.Fatalf("💥 Error connectinging to Kubernetes, system will exit")
 	}
 
 	srv := &server{
@@ -97,7 +97,7 @@ func NewServer(r *chi.Mux, conf Config, ver string) *server {
 
 		err := sseBroker.Stream(clientID, w, *r)
 		if err != nil {
-			log.Fatalln("💩 Error streaming SSE:", err)
+			log.Fatalln("💥 Error in SSE broker stream:", err)
 			return
 		}
 	})
@@ -172,7 +172,7 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 	log.Println("🍵 Fetching resources in", ns)
 
 	if s.config.SingleNamespace != "" && ns != s.config.SingleNamespace {
-		log.Printf("💩 Attempt to load namespace '%s' when only '%s' is allowed", ns, s.config.SingleNamespace)
+		log.Printf("🚫 Attempt to load namespace '%s' when only '%s' is allowed", ns, s.config.SingleNamespace)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 
 		return
@@ -180,7 +180,7 @@ func (s *server) loadNamespace(w http.ResponseWriter, r *http.Request) {
 
 	data, err := s.kubeService.FetchNamespace(ns)
 	if err != nil {
-		log.Printf("💩 Error fetching namespace: %v", err)
+		log.Printf("💥 Error fetching namespace: %v", err)
 		s.return500(w)
 
 		return
