@@ -14,11 +14,12 @@ KubeView 2 is a Kubernetes cluster visualization tool that provides a graphical 
 
 ### Features
 
-- Provides a secure read-only view of resources in a graph, with nodes representing resources and edges representing relationships
-- Colour coding of resources based on their status and health
-- Side panel allows you to view details of resources
+- Provides a secure read-only view of resources in a graph, with resources as nodes, linked with derived relationships
+- Real-time updates using Server-Sent Events (SSE) so view dynamically updates as resources change
+- Supports a wide range of common and core Kubernetes resource types, including Pods, Deployments, Services, ConfigMaps, Secrets, Ingresses, and more
+- Colour coding (Red, Greem, Grey) of resources based on their status and health
+- Side info panel allows you to view further details of resources
 - Filtering of resources by type to reduce clutter
-- Real-time updates using Server-Sent Events (SSE)
 
 ## Architecture & Design
 
