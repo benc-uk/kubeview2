@@ -72,6 +72,11 @@ func (s *KubeviewAPI) handleNamespaceList(w http.ResponseWriter, r *http.Request
 				}
 			}
 
+			if len(filteredNamespaces) == 0 {
+				problem.Wrap(500, r.RequestURI, "no namespaces found", errors.New("no namespaces match the filter")).Send(w)
+				return
+			}
+
 			namespaces = filteredNamespaces
 		}
 	}

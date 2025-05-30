@@ -153,8 +153,9 @@ Alpine.data('mainApp', () => ({
 
   // Fetch the list of namespaces from the server
   async refreshNamespaces() {
+    let res
     try {
-      const res = await fetch('api/namespaces')
+      res = await fetch('api/namespaces')
       if (!res.ok) throw new Error(`HTTP error ${res.status}: ${res.statusText}`)
 
       const data = await res.json()
@@ -168,7 +169,7 @@ Alpine.data('mainApp', () => ({
         this.namespace = this.namespaces[0]
       }
     } catch (err) {
-      this.showError(`Failed to fetch namespaces: ${err.message}`)
+      this.showError(`Failed to fetch namespaces: ${err.message}`, res)
       return
     }
 
@@ -176,9 +177,17 @@ Alpine.data('mainApp', () => ({
   },
 
   // Display an error message in the UI and log it to the console
-  showError(message) {
+  showError(message, res) {
     this.errorMessage = message
-    console.error(message)
+    if (!res) {
+      console.error(message)
+    } else {
+      res.json().then((data) => {
+        this.errorMessage += `<pre>${JSON.stringify(data, null, 2) || 'No additional error information provided'}<pre>`
+        console.error('API error', data)
+      })
+    }
+
     this.showWelcome = false
     this.isLoading = false
   },
@@ -199,12 +208,13 @@ Alpine.data('mainApp', () => ({
     this.showWelcome = false
 
     let data
+    let res
     try {
-      const res = await fetch(`api/fetch/${this.namespace}?clientID=${this.clientId}`)
+      res = await fetch(`api/fetch/${this.namespace}?clientID=${this.clientId}`)
       if (!res.ok) throw new Error(`HTTP error ${res.status}: ${res.statusText}`)
       data = await res.json()
     } catch (err) {
-      this.showError(`Failed to fetch namespace data: ${err.message}`)
+      this.showError(`Failed to fetch namespace data: ${err.message}`, res)
       return
     }
 

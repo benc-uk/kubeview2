@@ -88,7 +88,7 @@
   </nav>
   <div class="notification is-danger mx-5 mt-5" x-show="errorMessage" x-cloak>
     <p class="title is-3">💀 A terrible thing happened!</p>
-    <p x-text="errorMessage"></p><br>
+    <div x-html="errorMessage"></div><br>
     <button class="button is-outline" @click="window.location.reload()">Reload</button>
   </div>
 

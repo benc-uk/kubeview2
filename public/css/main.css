@@ -11,6 +11,12 @@ form {
   padding: 0;
 }
 
+pre {
+  margin: 10px !important;
+  padding: 5px !important;
+  background-color: #080808;
+}
+
 #mainView {
   width: 100%;
   height: calc(100% - 65px);
