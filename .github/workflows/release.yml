@@ -23,7 +23,7 @@ jobs:
 
       - name: Set BUILD_INFO based on git log
         run: |
-          echo BUILD_INFO="git log -1 --pretty=format:'%h %ad' --date=short" >> ${GITHUB_ENV}
+          echo BUILD_INFO="$(git log -1 --pretty=format:'%h %ad' --date=short)" >> ${GITHUB_ENV}
 
       - run: |
           echo ===== RELEASE ======
@@ -34,11 +34,11 @@ jobs:
       - name: Build & push images - version tagged
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
-          make images push
+          make image push
 
       - name: Build & push images - latest tagged
         env:
           IMAGE_TAG: latest
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
-          just images push
+          just image push
