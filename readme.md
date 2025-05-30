@@ -74,11 +74,11 @@ The following environment variables are supported:
 
 - `PORT`: The port on which the KubeView server will listen. Default is `8000`.
 - `SINGLE_NAMESPACE`: If set, KubeView will only show resources in the specified namespace
-- `NAMESPACE_FILTER`: A regex pattern to filter namespaces. If set, namespaces that match the pattern will be _excluded_. e.g. `NAMESPACE_FILTER=^kube-` will exclude system namespaces starting with `kube-`.
+- `NAMESPACE_FILTER`: A regex pattern to filter namespaces. If set, namespaces that match the pattern will be _excluded_ e.g. `NAMESPACE_FILTER=^kube-` will not show system namespaces starting with `kube-`.
 
 In addition the standard `KUBE_CONFIG` environment variable can be used to specify a custom path to the Kubernetes configuration file. If not set, it defaults to `$HOME/.kube/config`.
 
-## 🚢 Deploying to Kubernetes
+## ❇️ Deploying to Kubernetes
 
 Use the [provided Helm chart](deploy/helm) and [GitHub published images](https://github.com/benc-uk?tab=packages&repo_name=kubeview2) to deploy KubeView to your Kubernetes cluster. The chart is designed to be simple and easy to use, with a range of configuration options.
 
@@ -126,13 +126,13 @@ The project is structured as follows:
 
 The goal of this rewrite was to create a more maintainable codebase from the original KubeView. Some choices that have been made in this rewrite include:
 
-- Removal of any sort of JS framework, no Vue.js, and no bundling or NPM required.
+- Removal of Vue.js, and no bundling or NPM required.
 - Using SSE (Server-Sent Events) for real-time updates instead of polling.
 - Use of [Alpine.js](https://alpinejs.dev/) for managing client side behaviour.
 - Switch to [Bulma](https://bulma.io/) for CSS and themes.
 - Clean up & refactor messy parsing logic for resources and their relationships (but it's still pretty messy!).
 
-In retrospect, the results are not as elegant or clean as were hoped, much of the logic has to reside client side due to the use of Cytoscape.js. In order to get the required user experience, numerous subtle interactions between the client and server creep in. These are difficult to fully encapsulate or abstract away. However, the code is arguably more maintainable than the original KubeView, and the addition of SSE allows for a more responsive experience without the need for constant polling.
+The rewrite originally used HTMX for fetching data and HTML fragments from the server. This worked but ended up unnecessarily complicated with so many interactions between the frontend and backend, esp with Cytoscape. The resulting code was also hard to follow and understand. As a result the current rewrite is more of an iteration of v1, the Vue.js code has been removed and replaced with a simpler static HTML/JS app that uses Alpine.js for interactivity. The backend API has been clear separation of concerns and now dynamically handles updates using SSE.
 
 ## Appendix A: Kubernetes Permissions
 

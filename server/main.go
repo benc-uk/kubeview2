@@ -37,16 +37,11 @@ func main() {
 	httpServer := &http.Server{
 		Addr:    ":" + strconv.Itoa(config.Port),
 		Handler: r,
-		// Do NOT set ReadHeaderTimeout it messes with the SSE connection
+		// Do NOT set timeouts it messes with the SSE connection
+		// Also why we don't use api.StartServer
 	}
 
 	if err := httpServer.ListenAndServe(); err != nil {
 		log.Fatalf("💥 Server failed to start: %v", err)
 	}
-
-	defer (func() {
-		if err := httpServer.Close(); err != nil {
-			log.Fatalf("💥 Server failed to close: %v", err)
-		}
-	})()
 }

@@ -14,7 +14,7 @@ import { styleSheet } from './styles.js'
 import { addResource, processLinks, layout, coseLayout } from './graph.js'
 import { hideToast, showToast } from '../ext/toast.js'
 
-// A shared global map of resources by their UID
+// A shared global map of resources by their UID, used in a bunch of places
 export const resMap = {}
 
 // This is why we are here, Cytoscape will be used to render all the data
@@ -37,10 +37,12 @@ const bc = new BroadcastChannel('kubeview')
 
 // Alpine.js component for the main application
 Alpine.data('mainApp', () => ({
-  // Application state
+  // ===== Application state ================================
   panelShowLabels: false,
   panelOpen: false,
+  /** @type {PanelData} */
   panelData: {
+    id: '',
     kind: 'default',
     icon: 'default',
     props: {},
@@ -49,14 +51,15 @@ Alpine.data('mainApp', () => ({
   },
   errorMessage: '',
   /** @type {string[] | null} */
-  namespaces: null, // List of available namespaces
-  namespace: '', //
+  namespaces: null,
+  namespace: '',
   showWelcome: true,
   isLoading: false,
   clientId: getClientId(),
   showConfigDialog: false,
   configTab: 1,
   cfg: getConfig(),
+  /** @type {Record<string, string>} */
   serviceMetadata: {
     clusterHost: '',
     version: '',
@@ -64,7 +67,7 @@ Alpine.data('mainApp', () => ({
   },
   searchQuery: '',
 
-  // Functions
+  // ===== Functions ============================================
 
   // All app initialization logic is here
   async init() {

@@ -1,3 +1,7 @@
+// ==========================================================================================
+// HTTP routes and handlers for the Kubeview API
+// ==========================================================================================
+
 package main
 
 import (
@@ -10,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// All application routes are defined here
 func (s *KubeviewAPI) AddRoutes(r *chi.Mux) {
 	// Serve the index.html file from the public folder
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +34,7 @@ func (s *KubeviewAPI) AddRoutes(r *chi.Mux) {
 	r.Get("/api/fetch/{namespace}", s.handleFetchData)
 }
 
+// Establish the SSE connection for streaming updates each client
 func (s *KubeviewAPI) handleSSE(w http.ResponseWriter, r *http.Request) {
 	clientID := r.URL.Query().Get("clientID")
 	if clientID == "" {
@@ -45,6 +51,9 @@ func (s *KubeviewAPI) handleSSE(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Get the list of namespaces from the Kubernetes cluster
+// This the first endpoint that the frontend will call to get the list of namespaces
+// It also returns the cluster host, version, and build info
 func (s *KubeviewAPI) handleNamespaceList(w http.ResponseWriter, r *http.Request) {
 	log.Println("🔍 Fetching list of namespaces")
 
@@ -73,7 +82,8 @@ func (s *KubeviewAPI) handleNamespaceList(w http.ResponseWriter, r *http.Request
 			}
 
 			if len(filteredNamespaces) == 0 {
-				problem.Wrap(500, r.RequestURI, "no namespaces found", errors.New("no namespaces match the filter")).Send(w)
+				problem.Wrap(500, r.RequestURI, "no namespaces found",
+					errors.New("no namespaces match the filter")).Send(w)
 				return
 			}
 
@@ -91,6 +101,7 @@ func (s *KubeviewAPI) handleNamespaceList(w http.ResponseWriter, r *http.Request
 	s.ReturnJSON(w, res)
 }
 
+// Return the resources for a specific namespace
 func (s *KubeviewAPI) handleFetchData(w http.ResponseWriter, r *http.Request) {
 	ns := chi.URLParam(r, "namespace")
 

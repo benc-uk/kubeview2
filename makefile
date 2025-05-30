@@ -17,15 +17,15 @@ help: ## 💬 This help message :)
 lint: ## 🔍 Lint & format check only, use for CI
 	@figlet $@ || true
 	cd .dev/; npm install --silent
-	npx eslint -c .dev/eslint.config.mjs public/js
-	npx prettier --check --config .dev/.prettierrc public/js 
+	npx --yes eslint -c .dev/eslint.config.mjs public/js
+	npx --yes prettier --check --config .dev/.prettierrc public/js 
 	go tool -modfile=.dev/tools.mod golangci-lint run -c .dev/golangci.yaml
 
 lint-fix: ## ✨ Lint & try to format & fix
 	@figlet $@ || true
 	cd .dev/; npm install --silent
-	npx eslint -c .dev/eslint.config.mjs public/js --fix
-	npx prettier --write --config .dev/.prettierrc public/js
+	npx --yes eslint -c .dev/eslint.config.mjs public/js --fix
+	npx --yes prettier --write --config .dev/.prettierrc public/js
 	go tool -modfile=.dev/tools.mod golangci-lint run -c .dev/golangci.yaml --fix
 
 run: ## 🏃 Run application, used for local development
@@ -67,3 +67,4 @@ check-vars:
 	@if [[ -z "${IMAGE_NAME}" ]]; then echo "💥 Error! Required variable IMAGE_NAME is not set!"; exit 1; fi
 	@if [[ -z "${IMAGE_TAG}" ]]; then echo "💥 Error! Required variable IMAGE_TAG is not set!"; exit 1; fi
 	@if [[ -z "${VERSION}" ]]; then echo "💥 Error! Required variable VERSION is not set!"; exit 1; fi
+	@if [[ -z "${BUILD_INFO}" ]]; then echo "💥 Error! Required variable BUILD_INFO is not set!"; exit 1; fi

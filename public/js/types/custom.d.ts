@@ -26,6 +26,7 @@ declare type Resource = {
     uid: string
     name: string
     namespace: string
+    creationTimestamp: string
     deletionTimestamp: string | null
     labels: Record<string, string>
     ownerReferences: Array<{

@@ -83,7 +83,7 @@ export function initEventStreaming() {
 
   // Notify when the stream is connected
   updateStream.onopen = function () {
-    console.log('📚 Event stream ready:', updateStream.readyState === 1)
+    console.log('✅ Event stream ready:', updateStream.readyState === 1)
     const statusIcon = document.getElementById('eventStatusIcon')
 
     if (updateStream.readyState === 1 && statusIcon) {

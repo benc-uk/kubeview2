@@ -1,3 +1,7 @@
+// ==========================================================================================
+// The backend API for KubeView, handling requests and serving data
+// ==========================================================================================
+
 package main
 
 import (
@@ -10,7 +14,7 @@ import (
 	"github.com/benc-uk/kubeview2/server/services"
 )
 
-// This is the core API struct that will handle all the requests
+// This is the core struct for the server & API
 type KubeviewAPI struct {
 	*api.Base
 	kubeService *services.Kubernetes
