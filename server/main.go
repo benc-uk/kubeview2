@@ -14,6 +14,7 @@ import (
 )
 
 var version = "0.0.0"
+var buildInfo = "No build info available"
 
 func main() {
 	config := getConfig()
@@ -24,22 +25,23 @@ func main() {
 	r := chi.NewRouter()
 
 	// This configures the core server, handling pretty much everything
-	NewServer(r, config, version)
+	api := NewKubeviewAPI(config)
+	r.Use(api.SimpleCORSMiddleware)
+
+	api.AddHealthEndpoint(r, "health")
+	api.AddStatusEndpoint(r, "api/status")
+
+	api.AddRoutes(r)
 
 	//nolint:gosec
 	httpServer := &http.Server{
 		Addr:    ":" + strconv.Itoa(config.Port),
 		Handler: r,
-		// Do NOT set ReadHeaderTimeout it messes with the SSE connection
+		// Do NOT set timeouts it messes with the SSE connection
+		// Also why we don't use api.StartServer
 	}
 
 	if err := httpServer.ListenAndServe(); err != nil {
 		log.Fatalf("💥 Server failed to start: %v", err)
 	}
-
-	defer (func() {
-		if err := httpServer.Close(); err != nil {
-			log.Fatalf("💥 Server failed to close: %v", err)
-		}
-	})()
 }

@@ -289,6 +289,9 @@ function statusColour(res) {
 export function layout() {
   // Use breadthfirst with roots set to the main resources
   // This will create a tree-like structure with the main resources at the top
+  cy.resize()
+  cy.fit(null, 10)
+
   cy.layout({
     name: 'breadthfirst',
     directed: true,

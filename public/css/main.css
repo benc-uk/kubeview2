@@ -11,20 +11,25 @@ form {
   padding: 0;
 }
 
+pre {
+  margin: 10px !important;
+  padding: 5px !important;
+  background-color: #080808;
+}
+
 #mainView {
   width: 100%;
   height: calc(100% - 65px);
   background-color: #0a0b0d;
 }
 
-#spinner {
-  padding: 0;
-  margin: 0;
-}
-
-#spinner img {
-  max-height: 100% !important;
-  max-width: 100% !important;
+#loading {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  top: 100px;
+  width: 100%;
+  z-index: 20;
 }
 
 #infoPanel {
@@ -88,16 +93,6 @@ form {
 
 [x-cloak] {
   display: none !important;
-}
-
-.htmx-indicator {
-  display: none;
-}
-.htmx-request .htmx-indicator {
-  display: inline;
-}
-.htmx-request.htmx-indicator {
-  display: inline;
 }
 
 #welcome {

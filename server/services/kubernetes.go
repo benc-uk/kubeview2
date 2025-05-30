@@ -184,6 +184,15 @@ func (k *Kubernetes) GetNamespaces() ([]string, error) {
 	return out, nil
 }
 
+func (k *Kubernetes) CheckNamespaceExists(ns string) bool {
+	gvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "namespaces"}
+
+	// Try to get the namespace
+	_, err := k.client.Resource(gvr).Get(context.TODO(), ns, metaV1.GetOptions{})
+
+	return err == nil
+}
+
 func (k *Kubernetes) FetchNamespace(ns string) (map[string][]unstructured.Unstructured, error) {
 	if ns == "" {
 		return nil, errors.New("namespace is empty")
@@ -265,8 +274,13 @@ func getHandlerFuncs(b *sse.Broker[KubeEvent]) cache.ResourceEventHandlerFuncs {
 	return cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			u := obj.(*unstructured.Unstructured)
+			namespace := u.GetNamespace()
+			if namespace == "" {
+				return
+			}
+
 			u.SetManagedFields(nil)
-			b.SendToAll(KubeEvent{
+			b.SendToGroup(namespace, KubeEvent{
 				EventType: AddEvent,
 				Object:    u,
 			})
@@ -274,8 +288,13 @@ func getHandlerFuncs(b *sse.Broker[KubeEvent]) cache.ResourceEventHandlerFuncs {
 
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			u := newObj.(*unstructured.Unstructured)
+			namespace := u.GetNamespace()
+			if namespace == "" {
+				return
+			}
+
 			u.SetManagedFields(nil)
-			b.SendToAll(KubeEvent{
+			b.SendToGroup(namespace, KubeEvent{
 				EventType: UpdateEvent,
 				Object:    u,
 			})
@@ -283,8 +302,13 @@ func getHandlerFuncs(b *sse.Broker[KubeEvent]) cache.ResourceEventHandlerFuncs {
 
 		DeleteFunc: func(obj interface{}) {
 			u := obj.(*unstructured.Unstructured)
+			namespace := u.GetNamespace()
+			if namespace == "" {
+				return
+			}
+
 			u.SetManagedFields(nil)
-			b.SendToAll(KubeEvent{
+			b.SendToGroup(namespace, KubeEvent{
 				EventType: DeleteEvent,
 				Object:    u,
 			})
