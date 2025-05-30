@@ -1,6 +1,6 @@
-# ====================================
+# ==============================================================
 # Build stage
-# ====================================
+# ==============================================================
 FROM golang:1.24-alpine AS builder
 ARG VERSION="0.0.0"
 ARG BUILD_INFO="Unset"
@@ -12,14 +12,15 @@ RUN go mod download
 
 COPY server/ ./server/
 
-# Build the Go binary injecting the version
+# Build the Go binary injecting the version 
 RUN go build -o ./kubeview \
   -ldflags "-X main.version=$VERSION -X 'main.buildInfo=$BUILD_INFO'" \
   ./server
 
-# =====================================
+# ==============================================================
 # Final minimal image
-# =====================================
+# Note: Use alpine rather than scratch for easier debugging
+# ==============================================================
 FROM alpine:3.21
 
 WORKDIR /app
@@ -29,6 +30,7 @@ COPY --from=builder /build/kubeview .
 # Copy public web assets
 COPY public/ ./public/
 
+ENV PORT=8000
 EXPOSE 8000
 
 # Run the binary

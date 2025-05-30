@@ -57,7 +57,7 @@ Pre-reqs:
 
 - Docker or other container runtime like Podman.
 - A Kubernetes cluster to connect to (can be local or remote)
-- A valid Kubernetes configuration file (usually located at `$HOME/.kube/config`), if you using kubectl, chances are you already have this set up.
+- A valid Kubernetes configuration file, if you using kubectl, chances are you already have this set up.
 
 Running it via Docker is the easiest way to get started. You can quickly run KubeView locally with the following command:
 
@@ -67,6 +67,16 @@ docker run --rm -it --volume "$HOME/.kube:/root/.kube" \
 ```
 
 This mounts your local Kubernetes configuration directory `$HOME/.kube` into the container, allowing KubeView to access your cluster. The app will be accessible at `http://localhost:8000`. If your config file is located elsewhere, you need to adjust the volume mount accordingly.
+
+### Configuration
+
+The following environment variables are supported:
+
+- `PORT`: The port on which the KubeView server will listen. Default is `8000`.
+- `SINGLE_NAMESPACE`: If set, KubeView will only show resources in the specified namespace
+- `NAMESPACE_FILTER`: A regex pattern to filter namespaces. If set, namespaces that match the pattern will be _excluded_. e.g. `NAMESPACE_FILTER=^kube-` will exclude system namespaces starting with `kube-`.
+
+In addition the standard `KUBE_CONFIG` environment variable can be used to specify a custom path to the Kubernetes configuration file. If not set, it defaults to `$HOME/.kube/config`.
 
 ## 🚢 Deploying to Kubernetes
 
