@@ -56,6 +56,17 @@
             <span class="icon"><i class="fas fa-expand"></i></span>
           </button>
         </div>
+        <div class="navbar-item">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input class="input" type="text" placeholder="Search resources..." x-model="searchQuery"
+                @keyup.enter="searchResources()" />
+              <span class="icon is-left">
+                <i class="fas fa-search"></i>
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
       <div class="navbar-end">
         <div class="navbar-item">

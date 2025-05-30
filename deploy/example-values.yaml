@@ -7,7 +7,7 @@ image:
   pullPolicy: Always
   tag: dev
 
-singleNamespace: false
+singleNamespace: true
 
 loadBalancer:
   enabled: false

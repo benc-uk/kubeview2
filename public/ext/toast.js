@@ -80,7 +80,26 @@ export function showToast(message, duration = 2000, pos = 'top-center') {
     toast.classList.replace('toastShown', 'toastHidden')
     // Remove from the DOM *after* fading out
     setTimeout(function () {
-      document.body.removeChild(toast)
+      try {
+        document.body.removeChild(toast)
+      } catch (err) {
+        // Ignore if already removed
+      }
     }, 1000)
   }, duration)
+}
+
+export function hideToast(time) {
+  const toast = document.querySelector('.toast')
+  if (toast) {
+    toast.classList.replace('toastShown', 'toastHidden')
+    // Remove from the DOM *after* fading out
+    setTimeout(function () {
+      try {
+        document.body.removeChild(toast)
+      } catch (err) {
+        // Ignore if already removed
+      }
+    }, time || 1000)
+  }
 }

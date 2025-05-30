@@ -10,6 +10,7 @@ import (
 	"github.com/benc-uk/kubeview2/server/services"
 )
 
+// This is the core API struct that will handle all the requests
 type KubeviewAPI struct {
 	*api.Base
 	kubeService *services.Kubernetes
@@ -64,6 +65,7 @@ func NewKubeviewAPI(conf Config) *KubeviewAPI {
 		log.Fatalf("💥 Error connecting to Kubernetes, system will exit")
 	}
 
+	// Our API struct is a wrapper around the base API functionality
 	return &KubeviewAPI{
 		api.NewBase("kubeview", version, buildInfo, true),
 		kubeSvc,

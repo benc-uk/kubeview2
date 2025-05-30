@@ -23,11 +23,20 @@ KubeView 2 is a Kubernetes cluster visualization tool that provides a graphical 
 
 ## Architecture & Design
 
-KubeView is built using Go for the backend, rendering HTML using templ. The frontend uses a combination of HTMX for dynamic content fetching and Alpine.js for client-side interactivity. The visualization is powered by Cytoscape.js, which provides the graph rendering and visualization capabilities
+KubeView is built using Go for the backend, exposing a REST API that serves static HTML/JS and provides the data for the frontend. The frontend is a static web application that uses HTML, CSS, and JavaScript to render the user interface. It uses [Cytoscape.js](https://js.cytoscape.org/) for graph visualization, [Alpine.js](https://alpinejs.dev/) for client-side interactivity, and [Bulma](https://bulma.io/) for styling.
 
-The backend uses the Go client for Kubernetes to interact with the cluster and retrieve resource information, including setting up watchers for real-time updates streamed using SSE. The templating engine is used to render the HTML pages, which are then served to the client.
+The backend uses the Go client for Kubernetes to interact with the cluster and retrieve resource information, including setting up watchers for real-time updates streamed using SSE. The data is then processed and sent to the frontend as JSON, which the frontend uses to render the graph and update the UI.
 
 ![diagram of system](./docs/diagram.drawio.png)
+
+### Routes & Endpoints
+
+- `/api/namespaces`: Returns a list of namespaces in the cluster.
+- `/api/fetch/{namespace}?clientID={clientID}`: Returns a list of resources in the cluster for the specified namespace. The `clientID` is used to identify the client for SSE updates.
+- `/api/status`: Returns the status of the KubeView server, including the version and build information.
+- `/health`: Simple health endpoint to check if the server is running.
+- `/public/*`: Serves static files such as HTML, CSS, JavaScript, and images used by the frontend application.
+- `/`: Serves the main HTML page (index.html) that loads the KubeView application.
 
 ## Security and Kubernetes Auth
 
@@ -94,9 +103,8 @@ The project is structured as follows:
  │   ├── ext          # External libraries (e.g., Cytoscape.js, Alpine.js)
  │   ├── img          # Images and icons
  │   └── js           # All client side JavaScript, see main.js for entry point
- └── server
-     ├── services     # Services for handling Kubernetes resources and SSE
-     └── templates    # Templ templates for rendering HTML
+ └── server           # Core backend API server
+     └── services     # Services for handling Kubernetes resources and SSE
 ```
 
 ## Why a v2 Rewrite?
@@ -104,7 +112,6 @@ The project is structured as follows:
 The goal of this rewrite was to create a more maintainable codebase from the original KubeView. Some choices that have been made in this rewrite include:
 
 - Removal of any sort of JS framework, no Vue.js, and no bundling or NPM required.
-- Switch to [HTMX](https://htmx.org/) and [templ](https://templ.guide/), putting much of the logic in the backend.
 - Using SSE (Server-Sent Events) for real-time updates instead of polling.
 - Use of [Alpine.js](https://alpinejs.dev/) for managing client side behaviour.
 - Switch to [Bulma](https://bulma.io/) for CSS and themes.

@@ -12,7 +12,7 @@ import { getConfig, saveConfig } from './config.js'
 import { getClientId, initEventStreaming } from './events.js'
 import { styleSheet } from './styles.js'
 import { addResource, processLinks, layout, coseLayout } from './graph.js'
-import { showToast } from '../ext/toast.js'
+import { hideToast, showToast } from '../ext/toast.js'
 
 // A shared global map of resources by their UID
 export const resMap = {}
@@ -62,10 +62,11 @@ Alpine.data('mainApp', () => ({
     version: '',
     buildInfo: '',
   },
+  searchQuery: '',
 
   // Functions
 
-  // Whole app initialization
+  // All app initialization logic is here
   async init() {
     console.log('🚀 Initializing KubeView...')
     console.log(`🙍 ClientID ${this.clientId}`)
@@ -86,7 +87,9 @@ Alpine.data('mainApp', () => ({
       bc.postMessage({ type: 'namespaceChange', namespace: this.namespace })
     })
 
-    // Check if the URL has a namespace parameter
+    this.$watch('searchQuery', (query) => this.search(query))
+
+    // Check if the URL has a namespace parameter, then automatically set it
     const urlParams = new URLSearchParams(window.location.search)
     const queryNs = urlParams.get('ns') || ''
     if (queryNs) {
@@ -94,8 +97,10 @@ Alpine.data('mainApp', () => ({
       this.namespace = queryNs
     }
 
+    // Load the initial namespaces
     await this.refreshNamespaces()
 
+    // When nodes are tapped or clicked, show the info panel with the resource details
     cy.on('tap', 'node', (evt) => {
       const node = evt.target
       if (node.data('resource')) {
@@ -138,21 +143,20 @@ Alpine.data('mainApp', () => ({
       }
     })
 
+    // Handle layout stop event to show a toast if no nodes are present
     cy.on('layoutstop', () => {
       if (cy.nodes().length === 0) {
-        showToast('No resources found in this namespace<br>Check your filter settings', 3000, 'top-center')
+        showToast('🤷‍♂️ No resources found in this namespace<br>Check your filter settings', 3000, 'top-center')
       }
     })
   },
 
+  // Fetch the list of namespaces from the server
   async refreshNamespaces() {
-    const res = await fetch('api/namespaces')
-    if (!res.ok) {
-      this.showError(`Failed to load namespaces: ${res.statusText}`)
-      return
-    }
-
     try {
+      const res = await fetch('api/namespaces')
+      if (!res.ok) throw new Error(`HTTP error ${res.status}: ${res.statusText}`)
+
       const data = await res.json()
       this.namespaces = data.namespaces || []
       this.serviceMetadata.clusterHost = data.clusterHost || ''
@@ -164,13 +168,14 @@ Alpine.data('mainApp', () => ({
         this.namespace = this.namespaces[0]
       }
     } catch (err) {
-      this.showError(`Failed to parse namespaces: ${err.message}`)
+      this.showError(`Failed to fetch namespaces: ${err.message}`)
       return
     }
 
-    console.log(`📚 Found ${this.namespaces ? this.namespace.length : 0} namespaces in cluster`)
+    console.log(`📚 Found ${this.namespaces ? this.namespaces.length : 0} namespaces in cluster`)
   },
 
+  // Display an error message in the UI and log it to the console
   showError(message) {
     this.errorMessage = message
     console.error(message)
@@ -178,30 +183,28 @@ Alpine.data('mainApp', () => ({
     this.isLoading = false
   },
 
+  // Main function to fetch the namespace data
   async fetchNamespace() {
     if (this.isLoading) {
       console.warn('⚠️ Fetch already in progress, ignoring new request')
       return
     }
 
+    this.searchQuery = ''
     this.isLoading = true
     window.history.replaceState({}, '', `?ns=${this.namespace}`)
-    cy.elements().remove()
-
-    const res = await fetch(`api/fetch/${this.namespace}?clientID=${this.clientId}`)
-    if (!res.ok) {
-      this.showError(`Failed to fetch namespace data: ${res.statusText}`)
-    }
+    cy.elements().remove() // Clear the graph before loading new data
 
     this.isLoading = false
     this.showWelcome = false
 
     let data
     try {
+      const res = await fetch(`api/fetch/${this.namespace}?clientID=${this.clientId}`)
+      if (!res.ok) throw new Error(`HTTP error ${res.status}: ${res.statusText}`)
       data = await res.json()
     } catch (err) {
-      this.errorMessage = `Failed to parse namespace data: ${err.message}`
-      console.error(this.errorMessage)
+      this.showError(`Failed to fetch namespace data: ${err.message}`)
       return
     }
 
@@ -224,6 +227,43 @@ Alpine.data('mainApp', () => ({
     layout()
   },
 
+  // Filter the viewable graph based on the search query
+  search(query) {
+    const q = query.trim().toLowerCase()
+
+    if (q.length === 0) {
+      // If the search query is empty, show everything
+      cy.elements().style({
+        display: 'element',
+        visibility: 'visible',
+      })
+      hideToast(20)
+      this.toolbarFit()
+      return
+    }
+
+    // Set all nodes that match the search query to be visible
+    // And hide all nodes that do not match
+    const result = cy.$('node[label*="' + q + '"]')
+    result.style({
+      display: 'element',
+      visibility: 'visible',
+    })
+    result.symdiff('node').style({
+      display: 'none',
+      visibility: 'hidden',
+    })
+
+    if (cy.$(':visible').length <= 0) {
+      showToast('No resources found matching the search query', 2000, 'top-center')
+    } else {
+      hideToast(20)
+    }
+
+    this.toolbarFit()
+  },
+
+  // Save settings to the config
   configDialogSave() {
     saveConfig(this.cfg)
     this.showConfigDialog = false
