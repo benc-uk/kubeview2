@@ -17,14 +17,13 @@ form {
   background-color: #0a0b0d;
 }
 
-#spinner {
-  padding: 0;
-  margin: 0;
-}
-
-#spinner img {
-  max-height: 100% !important;
-  max-width: 100% !important;
+#loading {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  top: 100px;
+  width: 100%;
+  z-index: 20;
 }
 
 #infoPanel {
@@ -88,16 +87,6 @@ form {
 
 [x-cloak] {
   display: none !important;
-}
-
-.htmx-indicator {
-  display: none;
-}
-.htmx-request .htmx-indicator {
-  display: inline;
-}
-.htmx-request.htmx-indicator {
-  display: inline;
 }
 
 #welcome {

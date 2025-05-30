@@ -9,7 +9,7 @@ import cytoscape from '../ext/cytoscape.esm.min.mjs'
 import Alpine from '../ext/alpinejs.esm.min.js'
 
 import { getConfig, saveConfig } from './config.js'
-import { initEventStreaming } from './events.js'
+import { getClientId, initEventStreaming } from './events.js'
 import { styleSheet } from './styles.js'
 import { addResource, processLinks, layout, coseLayout } from './graph.js'
 import { showToast } from '../ext/toast.js'
@@ -20,21 +20,25 @@ export const resMap = {}
 // This is why we are here, Cytoscape will be used to render all the data
 export const cy = cytoscape({
   container: document.getElementById('mainView'),
-  // boxSelectionEnabled: false,
   style: styleSheet,
 })
-
-// Exported variable holding the current namespace
-export let currentNamespace = ''
 
 window.addEventListener('resize', function () {
   cy.resize()
   cy.fit(null, 10)
 })
 
+// Set up the event streaming for live updates once the DOM is loaded
+window.addEventListener('DOMContentLoaded', () => {
+  initEventStreaming()
+})
+
+const bc = new BroadcastChannel('kubeview')
+
 // Alpine.js component for the main application
 Alpine.data('mainApp', () => ({
-  labelsShown: false,
+  // Application state
+  panelShowLabels: false,
   panelOpen: false,
   panelData: {
     kind: 'default',
@@ -44,23 +48,54 @@ Alpine.data('mainApp', () => ({
     labels: {},
   },
   errorMessage: '',
-
-  htmxError(event) {
-    if (!event) this.errorMessage = ''
-
-    const info = event.detail.errorInfo
-    this.errorMessage = `${info.error}, METHOD: ${info.requestConfig.verb}, PATH:${info.pathInfo.finalRequestPath}`
+  /** @type {string[] | null} */
+  namespaces: null, // List of available namespaces
+  namespace: '', //
+  showWelcome: true,
+  isLoading: false,
+  clientId: getClientId(),
+  showConfigDialog: false,
+  configTab: 1,
+  cfg: getConfig(),
+  serviceMetadata: {
+    clusterHost: '',
+    version: '',
+    buildInfo: '',
   },
 
-  toolbarCoseLayout: coseLayout,
+  // Functions
 
-  toolbarFit() {
-    cy.resize()
-    cy.fit(null, 10)
-  },
+  // Whole app initialization
+  async init() {
+    console.log('🚀 Initializing KubeView...')
+    console.log(`🙍 ClientID ${this.clientId}`)
 
-  // Hook into the cytoscape instance for various events
-  init() {
+    // Listen for messages from the BroadcastChannel, just to warn about namespace changes
+    bc.onmessage = (event) => {
+      if (event.data.type === 'namespaceChange') {
+        showToast(`Namespace was changed on a different tab<br>you will no longer see live updates here!`, 5000, 'top-center')
+      }
+    }
+
+    this.$watch('namespace', () => {
+      console.log(`🔄 Namespace changed to: ${this.namespace}`)
+
+      this.fetchNamespace()
+
+      // This is a workaround to notify other tabs about the namespace change
+      bc.postMessage({ type: 'namespaceChange', namespace: this.namespace })
+    })
+
+    // Check if the URL has a namespace parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    const queryNs = urlParams.get('ns') || ''
+    if (queryNs) {
+      this.showWelcome = false
+      this.namespace = queryNs
+    }
+
+    await this.refreshNamespaces()
+
     cy.on('tap', 'node', (evt) => {
       const node = evt.target
       if (node.data('resource')) {
@@ -109,66 +144,105 @@ Alpine.data('mainApp', () => ({
       }
     })
   },
-}))
 
-// Component for the configuration panel
-Alpine.data('configComponent', () => ({
-  cfg: getConfig(),
-  tab: 1,
-  namespace: currentNamespace,
+  async refreshNamespaces() {
+    const res = await fetch('api/namespaces')
+    if (!res.ok) {
+      this.showError(`Failed to load namespaces: ${res.statusText}`)
+      return
+    }
 
-  save() {
-    saveConfig(this.cfg)
+    try {
+      const data = await res.json()
+      this.namespaces = data.namespaces || []
+      this.serviceMetadata.clusterHost = data.clusterHost || ''
+      this.serviceMetadata.version = data.version || ''
+      this.serviceMetadata.buildInfo = data.buildInfo || ''
+
+      // if single namespace is returned, set it as the current namespace
+      if (this.namespaces && this.namespaces.length === 1) {
+        this.namespace = this.namespaces[0]
+      }
+    } catch (err) {
+      this.showError(`Failed to parse namespaces: ${err.message}`)
+      return
+    }
+
+    console.log(`📚 Found ${this.namespaces ? this.namespace.length : 0} namespaces in cluster`)
   },
+
+  showError(message) {
+    this.errorMessage = message
+    console.error(message)
+    this.showWelcome = false
+    this.isLoading = false
+  },
+
+  async fetchNamespace() {
+    if (this.isLoading) {
+      console.warn('⚠️ Fetch already in progress, ignoring new request')
+      return
+    }
+
+    this.isLoading = true
+    window.history.replaceState({}, '', `?ns=${this.namespace}`)
+    cy.elements().remove()
+
+    const res = await fetch(`api/fetch/${this.namespace}?clientID=${this.clientId}`)
+    if (!res.ok) {
+      this.showError(`Failed to fetch namespace data: ${res.statusText}`)
+    }
+
+    this.isLoading = false
+    this.showWelcome = false
+
+    let data
+    try {
+      data = await res.json()
+    } catch (err) {
+      this.errorMessage = `Failed to parse namespace data: ${err.message}`
+      console.error(this.errorMessage)
+      return
+    }
+
+    // Pass 1 - Add ALL the resources to the graph
+    for (const kindKey in data) {
+      const resources = data[kindKey]
+      for (const res of resources || []) {
+        addResource(res)
+      }
+    }
+
+    // Pass 2 - Add links between using metadata.ownerReferences
+    for (const kindKey in data) {
+      const resources = data[kindKey]
+      for (const res of resources || []) {
+        processLinks(res)
+      }
+    }
+
+    layout()
+  },
+
+  configDialogSave() {
+    saveConfig(this.cfg)
+    this.showConfigDialog = false
+    showToast('Configuration saved successfully', 3000, 'top-center')
+    this.fetchNamespace()
+  },
+
+  toolbarCoseLayout: coseLayout,
+
+  toolbarFit() {
+    cy.resize()
+    cy.fit(null, 10)
+  },
+
+  toolbarTreeLayout: layout,
 }))
 
 // Initialize & start Alpine.js
 Alpine.start()
-
-// Set up the event streaming for live updates once the DOM is loaded
-window.addEventListener('DOMContentLoaded', () => {
-  initEventStreaming()
-})
-
-/**
- * Global function to load the namespace data
- * This function is called from the server side template when the namespace is loaded
- */
-globalThis.namespaceLoaded = function (ns, data) {
-  console.log(`📚 Data for namespace '${ns}' received`)
-
-  currentNamespace = ns
-  window.history.replaceState({}, '', `?ns=${ns}`)
-  cy.elements().remove()
-
-  if (getConfig().debug) {
-    console.log('🐞 DEBUG! Received data:')
-    console.dir(data)
-  }
-
-  let resCount = 0
-  // Pass 1 - Add ALL the resources to the graph
-  for (const kindKey in data) {
-    const resources = data[kindKey]
-    for (const res of resources || []) {
-      if (addResource(res)) resCount++
-    }
-  }
-
-  // Pass 2 - Add links between using metadata.ownerReferences
-  for (const kindKey in data) {
-    const resources = data[kindKey]
-    for (const res of resources || []) {
-      processLinks(res)
-    }
-  }
-
-  if (resCount === 0) {
-    console.warn('⚠️ No resources found in this namespace')
-  }
-
-  layout()
-}
 
 /**
  * For a given resource ID, this function retrieves the data to be shown in the info panel

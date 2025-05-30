@@ -6,13 +6,27 @@
 // ==========================================================================================
 import { layout, removeResource, addResource, updateResource } from './graph.js'
 import { getConfig } from './config.js'
-import { currentNamespace } from './main.js'
+
+/**
+ * Get a unique client ID for this session, stored in localStorage.
+ * If no ID exists, generate a new one and store it.
+ * @returns {string} The client ID
+ */
+export function getClientId() {
+  let clientID = localStorage.getItem('clientId')
+
+  if (!clientID || clientID === 'undefined' || clientID === 'null') {
+    console.warn('🆔 No client ID found, generating a new one:' + clientID)
+    clientID = Math.random().toString(36).substring(2, 15)
+    localStorage.setItem('clientId', clientID)
+    return clientID
+  }
+
+  return clientID
+}
 
 export function initEventStreaming() {
-  // Generate or fetch random client token, to identify the client
-  localStorage.getItem('clientId') || localStorage.setItem('clientId', Math.random().toString(36).substring(2, 15))
-  const clientId = localStorage.getItem('clientId')
-  console.log('🆔 Client ID:', clientId)
+  const clientId = getClientId()
 
   console.log('🌐 Opening event stream...')
   const updateStream = new EventSource(`/updates?clientID=${clientId}`, {})
@@ -27,8 +41,6 @@ export function initEventStreaming() {
       console.error('💥 Error parsing event data:', e)
       return
     }
-
-    if (res.metadata.namespace !== currentNamespace) return
 
     if (getConfig().debug) console.log('⬆️ Add resource:', res.kind, res.metadata.name)
 
@@ -47,8 +59,6 @@ export function initEventStreaming() {
       return
     }
 
-    if (res.metadata.namespace !== currentNamespace) return
-
     if (getConfig().debug) console.log('☠️ Delete resource:', res.kind, res.metadata.name)
 
     removeResource(res)
@@ -65,8 +75,6 @@ export function initEventStreaming() {
       console.error('💥 Error parsing event data:', e)
       return
     }
-
-    if (res.metadata.namespace !== currentNamespace) return
 
     if (getConfig().debug) console.log('⬆️ Update resource:', res.kind, res.metadata.name)
 

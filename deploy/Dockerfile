@@ -3,6 +3,7 @@
 # ====================================
 FROM golang:1.24-alpine AS builder
 ARG VERSION="0.0.0"
+ARG BUILD_INFO="Unset"
 
 WORKDIR /build
 
@@ -13,7 +14,7 @@ COPY server/ ./server/
 
 # Build the Go binary injecting the version
 RUN go build -o ./kubeview \
-  -ldflags "-X main.version=$VERSION" \
+  -ldflags "-X main.version=$VERSION -X 'main.buildInfo=$BUILD_INFO'" \
   ./server
 
 # =====================================

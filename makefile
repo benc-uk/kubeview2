@@ -4,6 +4,7 @@ export
 SHELL := /bin/bash
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 VERSION ?= $(shell git tag -l --sort=-creatordate | head -n 1)
+BUILD_INFO ?= dev-build $(shell git log -1 --pretty=format:'%h %ad' --date=short)
 
 .EXPORT_ALL_VARIABLES:
 .PHONY: help lint lint-fix run build generate clean image push check-vars helm-docs helm-package
@@ -47,6 +48,7 @@ image: check-vars ## 📦 Build container image from Dockerfile
 	@figlet $@ || true
 	docker build --file ./deploy/Dockerfile \
 	--build-arg VERSION="$(VERSION)" \
+	--build-arg BUILD_INFO="$(BUILD_INFO)" \
 	--tag $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
 push: check-vars ## 📤 Push container image to registry
