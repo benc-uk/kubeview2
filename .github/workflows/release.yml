@@ -1,0 +1,44 @@
+name: Release Images
+
+on:
+  release:
+    types: [published]
+
+env:
+  # Base the version and image tag on the release tag or user input
+  IMAGE_TAG: ${{ github.event.release.tag_name || github.event.inputs.version }}
+  VERSION: ${{ github.event.release.tag_name || github.event.inputs.version }}
+  IMAGE_REG: ghcr.io
+  IMAGE_NAME: benc-uk/kubeview2
+
+permissions:
+  packages: write
+
+jobs:
+  image-build:
+    name: Build and push images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set BUILD_INFO based on git log
+        run: |
+          echo BUILD_INFO="git log -1 --pretty=format:'%h %ad' --date=short" >> ${GITHUB_ENV}
+
+      - run: |
+          echo ===== RELEASE ======
+          echo VERSION: $VERSION
+          echo IMAGE_TAG: $IMAGE_TAG
+          echo BUILD_INFO: $BUILD_INFO
+
+      - name: Build & push images - version tagged
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
+          make images push
+
+      - name: Build & push images - latest tagged
+        env:
+          IMAGE_TAG: latest
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
+          just images push
