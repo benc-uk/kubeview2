@@ -189,6 +189,7 @@ func (k *Kubernetes) CheckNamespaceExists(ns string) bool {
 
 	// Try to get the namespace
 	_, err := k.client.Resource(gvr).Get(context.TODO(), ns, metaV1.GetOptions{})
+
 	return err == nil
 }
 

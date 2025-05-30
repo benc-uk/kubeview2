@@ -49,6 +49,7 @@ func (s *KubeviewAPI) handleNamespaceList(w http.ResponseWriter, r *http.Request
 	log.Println("🔍 Fetching list of namespaces")
 
 	var namespaces []string
+
 	var err error
 
 	if s.config.SingleNamespace != "" {
@@ -70,6 +71,7 @@ func (s *KubeviewAPI) handleNamespaceList(w http.ResponseWriter, r *http.Request
 					filteredNamespaces = append(filteredNamespaces, ns)
 				}
 			}
+
 			namespaces = filteredNamespaces
 		}
 	}
@@ -86,7 +88,9 @@ func (s *KubeviewAPI) handleNamespaceList(w http.ResponseWriter, r *http.Request
 
 func (s *KubeviewAPI) handleFetchData(w http.ResponseWriter, r *http.Request) {
 	ns := chi.URLParam(r, "namespace")
+
 	clientID := r.URL.Query().Get("clientID")
+
 	if clientID == "" {
 		http.Error(w, "clientID is required", http.StatusBadRequest)
 		return
@@ -96,7 +100,9 @@ func (s *KubeviewAPI) handleFetchData(w http.ResponseWriter, r *http.Request) {
 
 	// Check single namespace mode
 	if s.config.SingleNamespace != "" && ns != s.config.SingleNamespace {
-		problem.Wrap(403, r.RequestURI, "single namespace mode", errors.New("only namespace permitted is:"+s.config.SingleNamespace)).Send(w)
+		problem.Wrap(403, r.RequestURI, "single namespace mode",
+			errors.New("only namespace permitted is:"+s.config.SingleNamespace)).Send(w)
+
 		return
 	}
 

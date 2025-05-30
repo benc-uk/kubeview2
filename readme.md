@@ -8,44 +8,50 @@ KubeView 2 is a Kubernetes cluster visualization tool that provides a graphical 
 ![GitHub issues](https://img.shields.io/github/issues/benc-uk/kubeview2)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/benc-uk/kubeview2)
 
-## Details
+## 📜 Details
 
-![](./docs/screen.png)
+![](./docs/msedge_3RbHD33whE.png)
 
 ### Features
 
 - Provides a secure read-only view of resources in a graph, with resources as nodes, linked with derived relationships
 - Real-time updates using Server-Sent Events (SSE) so view dynamically updates as resources change
 - Supports a wide range of common and core Kubernetes resource types, including Pods, Deployments, Services, ConfigMaps, Secrets, Ingresses, and more
-- Colour coding (Red, Greem, Grey) of resources based on their status and health
+- Colour coding (Red/Green/Grey) of resources based on their status and health
 - Side info panel allows you to view further details of resources
 - Filtering of resources by type to reduce clutter
+- Search functionality to quickly find resources by name
 
-## Architecture & Design
+## 🏗️ Architecture & Design
 
-KubeView is built using Go for the backend, exposing a REST API that serves static HTML/JS and provides the data for the frontend. The frontend is a static web application that uses HTML, CSS, and JavaScript to render the user interface. It uses [Cytoscape.js](https://js.cytoscape.org/) for graph visualization, [Alpine.js](https://alpinejs.dev/) for client-side interactivity, and [Bulma](https://bulma.io/) for styling.
+KubeView is built using Go for the backend, exposing a REST API that provides the data for the frontend, and serves static HTML/JS. The frontend is a static web application that uses HTML, CSS, and JavaScript to render the user interface. It uses [Cytoscape.js](https://js.cytoscape.org/) for graph visualization, [Alpine.js](https://alpinejs.dev/) for client-side interactivity, and [Bulma](https://bulma.io/) for styling.
 
 The backend uses the Go client for Kubernetes to interact with the cluster and retrieve resource information, including setting up watchers for real-time updates streamed using SSE. The data is then processed and sent to the frontend as JSON, which the frontend uses to render the graph and update the UI.
 
 ![diagram of system](./docs/diagram.drawio.png)
 
+A `clientID` is used to identify the client and send updates for the resources they are interested in. The frontend JS generates a unique `clientID` when it first starts, stores it in local storage, and uses it in all subsequent requests to the backend. This allows the backend to send real-time updates only to the clients that are interested in those resources.
+
 ### Routes & Endpoints
 
 - `/api/namespaces`: Returns a list of namespaces in the cluster.
-- `/api/fetch/{namespace}?clientID={clientID}`: Returns a list of resources in the cluster for the specified namespace. The `clientID` is used to identify the client for SSE updates.
+- `/api/fetch/{namespace}?clientID={clientID}`: Returns a list of resources in the cluster for the specified namespace.
 - `/api/status`: Returns the status of the KubeView server, including the version and build information.
+- `/updates?clientID={clientID}`: Establishes a Server-Sent Events (SSE) connection for real-time updates.
 - `/health`: Simple health endpoint to check if the server is running.
 - `/public/*`: Serves static files such as HTML, CSS, JavaScript, and images used by the frontend application.
 - `/`: Serves the main HTML page (index.html) that loads the KubeView application.
 
-## Security and Kubernetes Auth
+## 🔐 Security and Kubernetes Auth
 
 The KubeView backend connects to the Kubernetes API via two methods, depending on where it is running:
 
 - **Outside a Kubernetes cluster:** In this mode, it locates the local Kubernetes configuration file (usually located at `$HOME/.kube/config`) to authenticate and access the cluster. This is suitable for local development or when running KubeView on a machine that has access to the Kubernetes cluster.
 - **Inside a Kubernetes cluster:** When running inside a cluster, KubeView uses a service account associated with the pod to authenticate and access the cluster. This service account should be assigned a role that grants it read-only access to the resources you want to visualize. This is the recommended way to run KubeView, and the Helm chart provides a service account, role & role-binding that can be used to set this up easily.
 
-## Running Locally
+The application itself does not enforce any authentication or authorization, it relies on the Kubernetes API server to handle access control. This means that the permissions granted to the service account or user in the Kubernetes cluster will determine what resources KubeView can access and display.
+
+## 🚀 Running Locally & Quick Start
 
 Pre-reqs:
 
@@ -62,11 +68,11 @@ docker run --rm -it --volume "$HOME/.kube:/root/.kube" \
 
 This mounts your local Kubernetes configuration directory `$HOME/.kube` into the container, allowing KubeView to access your cluster. The app will be accessible at `http://localhost:8000`. If your config file is located elsewhere, you need to adjust the volume mount accordingly.
 
-## Deploying to Kubernetes
+## 🚢 Deploying to Kubernetes
 
 Use the [provided Helm chart](deploy/helm) and [GitHub published images](https://github.com/benc-uk?tab=packages&repo_name=kubeview2) to deploy KubeView to your Kubernetes cluster. The chart is designed to be simple and easy to use, with a range of configuration options.
 
-## Developer Guide
+## 🧑‍💻 Developer Guide
 
 If you wish to contribute to KubeView, or make changes, it is suggested to use the dev container provided in the repo. This will ensure you have all the dependencies installed and configured correctly.
 
@@ -82,7 +88,6 @@ lint                 🔍 Lint & format check only, use for CI
 lint-fix             ✨ Lint & try to format & fix
 run                  🏃 Run application, used for local development
 build                🔨 Build application binary
-generate             📑 Compile templ templates
 clean                🧹 Clean up and reset
 image                📦 Build container image from Dockerfile
 push                 📤 Push container image to registry
@@ -107,7 +112,7 @@ The project is structured as follows:
      └── services     # Services for handling Kubernetes resources and SSE
 ```
 
-## Why a v2 Rewrite?
+## 🤓 Why a v2 Rewrite?
 
 The goal of this rewrite was to create a more maintainable codebase from the original KubeView. Some choices that have been made in this rewrite include:
 
@@ -119,9 +124,11 @@ The goal of this rewrite was to create a more maintainable codebase from the ori
 
 In retrospect, the results are not as elegant or clean as were hoped, much of the logic has to reside client side due to the use of Cytoscape.js. In order to get the required user experience, numerous subtle interactions between the client and server creep in. These are difficult to fully encapsulate or abstract away. However, the code is arguably more maintainable than the original KubeView, and the addition of SSE allows for a more responsive experience without the need for constant polling.
 
-## Appendix: API Role
+## Appendix A: Kubernetes Permissions
 
-The Kubernetes API permissions needed are `get`, `list`, `watch` for all of the following resources
+If you are not using the provided Helm chart, you will need to ensure that the service account or user that KubeView uses to connect to the Kubernetes API has the necessary API permissions.
+
+For reference these permissions are `get`, `list`, `watch` for all of the following resources:
 
 - v1/pods
 - v1/namespaces
@@ -134,7 +141,6 @@ The Kubernetes API permissions needed are `get`, `list`, `watch` for all of the 
 - apps/v1/replicasets
 - apps/v1/statefulsets
 - apps/v1/daemonsets
-- extensions/v1beta1/ingresses
 - networking.k8s.io/v1/ingresses
 - batch/v1/jobs
 - batch/v1/cronjobs
