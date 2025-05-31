@@ -54,10 +54,6 @@ image: check-vars ## 📦 Build container image from Dockerfile, with optional p
 	$(IMAGE_EXTRA_ARGS) \
 	--tag $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
-# push: check-vars ## 📤 Push container image to registry
-# 	@figlet $@ || true
-# 	docker push $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG)
-
 helm-docs: ## 📜 Update docs & readme for Helm chart
 	@figlet $@ || true
 	docker run --rm --volume "$(REPO_ROOT)/deploy/helm/kubeview:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest --sort-values-order file

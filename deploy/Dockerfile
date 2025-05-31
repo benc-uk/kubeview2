@@ -17,7 +17,10 @@ RUN go mod download
 
 COPY server/ ./server/
 
-# Build the Go binary injecting the version 
+# Build the Go binary for the specified platform
+# CGO_ENABLED=0 is used to ensure a statically linked binary
+# TARGETOS and TARGETARCH are set to build for the desired platform
+# The -ldflags option is used to embed version and build info into the binary
 RUN CGO_ENABLED=$CGO_ENABLED \
   GOOS=$TARGETOS \
   GOARCH=$TARGETARCH \
@@ -29,7 +32,7 @@ RUN CGO_ENABLED=$CGO_ENABLED \
 # Final minimal image
 # Note: Use alpine rather than scratch for easier debugging
 # ==============================================================
-FROM --platform=$BUILDPLATFORM alpine:3.21
+FROM --platform=$BUILDPLATFORM alpine:3.22
 
 WORKDIR /app
 

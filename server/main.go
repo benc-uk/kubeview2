@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// Version and build info are set at build time using -ldflags
 var version = "0.0.0"
 var buildInfo = "No build info available"
 
