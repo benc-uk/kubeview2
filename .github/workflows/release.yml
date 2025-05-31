@@ -8,13 +8,12 @@ on:
       version:
         description: 'Version to release'
         required: true
-        default: 'change-me'
+        default: 'dev'
         type: string
 
 env:
   # Base the version and image tag on the release tag or user input
-  IMAGE_TAG: ${{ github.event.release.tag_name || github.event.inputs.version }}
-  VERSION: ${{ github.event.release.tag_name || github.event.inputs.version }}
+  VERSION: ${{ github.event.release.tag_name || github.event.inputs.version || 'dev' }}
   IMAGE_REG: ghcr.io
   IMAGE_NAME: benc-uk/kubeview2
 
@@ -39,13 +38,17 @@ jobs:
           echo BUILD_INFO: $BUILD_INFO
 
       - name: Build & push images - version tagged
+        env:
+          IMAGE_TAG: ${{ env.VERSION }}
+          BUILD_PLATFORM: linux/amd64,darwin/arm64
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
           make image push
 
       - name: Build & push images - latest tagged
         env:
-          IMAGE_TAG: latest
+          IMAGE_TAG: 'latest'
+          BUILD_PLATFORM: linux/amd64,darwin/arm64
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
           make image push

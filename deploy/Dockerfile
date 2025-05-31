@@ -1,9 +1,14 @@
 # ==============================================================
 # Build stage
+# For the multi-platform build, see this guide:
+# https://docs.docker.com/build/building/multi-platform/#cross-compiling-a-go-application
 # ==============================================================
-FROM golang:1.24-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS build
 ARG VERSION="0.0.0"
 ARG BUILD_INFO="Unset"
+ARG CGO_ENABLED=0
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /build
 
@@ -13,20 +18,23 @@ RUN go mod download
 COPY server/ ./server/
 
 # Build the Go binary injecting the version 
-RUN go build -o ./kubeview \
-  -ldflags "-X main.version=$VERSION -X 'main.buildInfo=$BUILD_INFO'" \
+RUN CGO_ENABLED=$CGO_ENABLED \
+  GOOS=$TARGETOS \
+  GOARCH=$TARGETARCH \
+  go build -o ./kubeview \
+  -ldflags "-X 'main.version=$VERSION' -X 'main.buildInfo=$BUILD_INFO'" \
   ./server
 
 # ==============================================================
 # Final minimal image
 # Note: Use alpine rather than scratch for easier debugging
 # ==============================================================
-FROM alpine:3.21
+FROM --platform=$BUILDPLATFORM alpine:3.21
 
 WORKDIR /app
 
 # Copy binary and public assets
-COPY --from=builder /build/kubeview .
+COPY --from=build /build/kubeview .
 # Copy public web assets
 COPY public/ ./public/
 

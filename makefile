@@ -3,8 +3,11 @@ export
 
 SHELL := /bin/bash
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
+
+# Image & build configuration
 VERSION ?= $(shell git tag -l --sort=-creatordate | head -n 1)
 BUILD_INFO ?= dev-build $(shell git log -1 --pretty=format:'%h %ad' --date=short)
+BUILD_PLATFORM ?= linux/amd64
 
 .EXPORT_ALL_VARIABLES:
 .PHONY: help lint lint-fix run build generate clean image push check-vars helm-docs helm-package
@@ -34,7 +37,7 @@ run: ## 🏃 Run application, used for local development
 
 build: ## 🔨 Build application binary
 	@figlet $@ || true
-	go build -o bin/server ./server
+	CGO_ENABLED=0 GOOS=$(BUILD_OS) GOARCH=$(BUILD_ARCH) go build -o bin/kubeview ./server
 
 clean: ## 🧹 Clean up and reset
 	@figlet $@ || true
@@ -42,9 +45,10 @@ clean: ## 🧹 Clean up and reset
 
 image: check-vars ## 📦 Build container image from Dockerfile
 	@figlet $@ || true
-	docker build --file ./deploy/Dockerfile \
+	docker buildx build --file ./deploy/Dockerfile \
 	--build-arg VERSION="$(VERSION)" \
 	--build-arg BUILD_INFO="$(BUILD_INFO)" \
+	--platform $(BUILD_PLATFORM) \
 	--tag $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
 push: check-vars ## 📤 Push container image to registry
