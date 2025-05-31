@@ -3,8 +3,10 @@ name: CI Lint & Build
 on:
   push:
     branches: [main]
+    paths: ['server/**', 'public/**', '.dev/**']
   pull_request:
     branches: [main]
+    paths: ['server/**', 'public/**', '.dev/**']
 
 jobs:
   ci-job:
@@ -18,13 +20,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: '1.24'
 
       - name: Run lint
         run: make lint
-
-      - name: Run generate
-        run: make generate
 
       - name: Run build
         run: make build
