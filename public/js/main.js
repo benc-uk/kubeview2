@@ -292,6 +292,24 @@ Alpine.data('mainApp', () => ({
   },
 
   toolbarTreeLayout: layout,
+
+  async toolbarSavePNG() {
+    const blob = await cy.png({
+      full: true,
+      scale: 2,
+      bg: '#050505',
+      output: 'blob-promise',
+    })
+
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `kubeview-${this.namespace}.png`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  },
 }))
 
 // Initialize & start Alpine.js

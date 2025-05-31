@@ -55,6 +55,9 @@
           <button class="button is-primary" @click="toolbarFit()" title="Fit View">
             <span class="icon"><i class="fas fa-expand"></i></span>
           </button>
+          <button class="button is-primary" @click="toolbarSavePNG()" title="Save View as PNG">
+            <span class="icon"><i class="fas fa-camera"></i></span>
+          </button>
         </div>
         <div class="navbar-item">
           <div class="field">
@@ -92,9 +95,15 @@
     <button class="button is-outline" @click="window.location.reload()">Reload</button>
   </div>
 
-  <div class="notification is-success mx-5 mt-5" id="welcome" x-show="showWelcome" x-cloak>
-    <p class="title is-3">Welcome to KubeView</p>
-    <p>Choose a namespace from the dropdown to view resources</p>
+  <div class="notification is-light mx-5 mt-5" id="welcome" x-show="showWelcome" x-cloak>
+    <div class="mb-4 has-background-light p-2 rounded">
+      <img src="public/img/icon.png" class="logo"><span class="logotext">Welcome to KubeView</span>
+    </div>
+    <p class="has-text-dark">
+      To get started, select a namespace from the dropdown above.<br>
+      Use the buttons to switch between layouts, or fit the view to the screen<br>
+      Click on any resource to see its details in the info panel.
+    </p>
   </div>
 
   <!-- This is the main view where the graph will be rendered -->
@@ -105,14 +114,14 @@
   </div>
 
   <!-- This is the dialog for settings -->
-  <div class="modal is-active" x-show="showConfigDialog" x-cloak>
+  <div class="modal is-active" x-show="showConfigDialog" x-cloak id="configDialog">
     <div class="modal-background"></div>
     <div class="modal-card better-shad">
       <header class="modal-card-head has-background-primary py-3">
         <p class="modal-card-title has-text-black">Settings</p>
         <button class="delete" aria-label="close" @click="showConfigDialog = false"></button>
       </header>
-      <div class="modal-content dark-blur" style="min-height: 330px">
+      <div class="modal-content dark-blur">
         <section class="my-2 mx-2">
           <div class="tabs">
             <ul>
@@ -200,8 +209,8 @@
   <article class="panel is-link" id="infoPanel" x-transition:enter="slidein" x-transition:leave="slideout"
     x-show="panelOpen" x-cloak>
     <p class="panel-heading py-2">
-      <img :src="`public/img/res/${panelData.icon}.svg`" width="32" height="32" style="vertical-align: middle;" />
-      <span x-text="panelData.kind" style="vertical-align: middle;"></span>
+      <img :src="`public/img/res/${panelData.icon}.svg`" width="32" height="32" class="valign-middle" />
+      <span x-text="panelData.kind" class="valign-middle"></span>
     </p>
     <section>
       <div class="panel-block">
