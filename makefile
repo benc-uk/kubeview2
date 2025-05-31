@@ -49,7 +49,7 @@ image: check-vars ## 📦 Build container image from Dockerfile
 	--build-arg VERSION="$(VERSION)" \
 	--build-arg BUILD_INFO="$(BUILD_INFO)" \
 	--platform $(BUILD_PLATFORM) \
-	--output type=docker \
+	--load \
 	--tag $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
 push: check-vars ## 📤 Push container image to registry

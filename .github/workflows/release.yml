@@ -16,6 +16,8 @@ env:
   VERSION: ${{ github.event.release.tag_name || github.event.inputs.version || 'dev' }}
   IMAGE_REG: ghcr.io
   IMAGE_NAME: benc-uk/kubeview2
+  # Build a multi-platform image using QEMU and Buildx
+  BUILD_PLATFORM: linux/amd64,darwin/arm64
 
 permissions:
   packages: write
@@ -37,16 +39,17 @@ jobs:
           echo IMAGE_TAG: $IMAGE_TAG
           echo BUILD_INFO: $BUILD_INFO
 
+      # Needed for building multi-platform images
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
+      # Also needed for building multi-platform images
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build & push images - version tagged
         env:
           IMAGE_TAG: ${{ env.VERSION }}
-          BUILD_PLATFORM: linux/amd64,darwin/arm64
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
           make image push
@@ -54,7 +57,6 @@ jobs:
       - name: Build & push images - latest tagged
         env:
           IMAGE_TAG: 'latest'
-          BUILD_PLATFORM: linux/amd64,darwin/arm64
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
           make image push
