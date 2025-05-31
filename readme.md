@@ -4,9 +4,9 @@ KubeView 2 is a Kubernetes cluster visualization tool that provides a graphical 
 
 [![CI Lint & Build](https://github.com/benc-uk/kubeview2/actions/workflows/ci.yaml/badge.svg)](https://github.com/benc-uk/kubeview2/actions/workflows/ci.yaml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/benc-uk/kubeview2)
-![GitHub issues](https://img.shields.io/github/issues/benc-uk/kubeview2)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/benc-uk/kubeview2)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/benc-uk/kubeview2?include_prereleases)
+[![GitHub issues](https://img.shields.io/github/issues/benc-uk/kubeview2)](https://github.com/benc-uk/kubeview2/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/benc-uk/kubeview2)](https://github.com/benc-uk/kubeview2/pulls)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/benc-uk/kubeview2?include_prereleases)](https://github.com/benc-uk/kubeview2/releases)
 
 ## 📜 Details
 
