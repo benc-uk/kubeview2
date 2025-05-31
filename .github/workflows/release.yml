@@ -3,6 +3,13 @@ name: Release Images
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+        default: 'change-me'
+        type: string
 
 env:
   # Base the version and image tag on the release tag or user input
@@ -23,7 +30,7 @@ jobs:
 
       - name: Set BUILD_INFO based on git log
         run: |
-          echo BUILD_INFO="$(git log -1 --pretty=format:'%h %ad' --date=short)" >> ${GITHUB_ENV}
+          echo BUILD_INFO="stable $(git log -1 --pretty=format:'%h %ad' --date=short)" >> ${GITHUB_ENV}
 
       - run: |
           echo ===== RELEASE ======
