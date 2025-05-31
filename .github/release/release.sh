@@ -37,4 +37,5 @@ fi
 gh release create "$VERSION" --title "v$VERSION" \
   --notes-start-tag "$PREV_VERSION" \
   --generate-notes \
+  --target main \
   -F "$DIR"/release-notes.md
