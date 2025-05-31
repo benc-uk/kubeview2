@@ -48,6 +48,32 @@ pre {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
+#configDialog .modal-content {
+  min-height: 330px;
+}
+
+.logo {
+  vertical-align: middle;
+  width: 80px;
+  height: 80px;
+}
+
+.logotext {
+  font-size: 1.8rem;
+  color: #000;
+  margin-left: 10px;
+  vertical-align: middle;
+  font-weight: 600;
+}
+
+.rounded {
+  border-radius: 0.5rem;
+}
+
+.valign-middle {
+  vertical-align: middle;
+}
+
 .dark-blur {
   backdrop-filter: blur(20px);
   background-color: rgba(0, 0, 0, 0.7);
@@ -101,4 +127,5 @@ pre {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 22;
+  background-color: rgb(182, 209, 226);
 }
