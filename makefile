@@ -8,6 +8,8 @@ REPO_ROOT := $(shell git rev-parse --show-toplevel)
 VERSION ?= $(shell git tag -l --sort=-creatordate | head -n 1)
 BUILD_INFO ?= dev-build $(shell git log -1 --pretty=format:'%h %ad' --date=short)
 BUILD_PLATFORM ?= linux/amd64
+# Set this to '--push' to enable image push
+IMAGE_EXTRA_ARGS ?= 
 
 .EXPORT_ALL_VARIABLES:
 .PHONY: help lint lint-fix run build generate clean image push check-vars helm-docs helm-package
@@ -43,18 +45,18 @@ clean: ## 🧹 Clean up and reset
 	@figlet $@ || true
 	@rm -rf tmp bin
 
-image: check-vars ## 📦 Build container image from Dockerfile
+image: check-vars ## 📦 Build container image from Dockerfile, with optional push
 	@figlet $@ || true
 	docker buildx build --file ./deploy/Dockerfile \
 	--build-arg VERSION="$(VERSION)" \
 	--build-arg BUILD_INFO="$(BUILD_INFO)" \
 	--platform $(BUILD_PLATFORM) \
-	--load \
+	$(IMAGE_EXTRA_ARGS) \
 	--tag $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
-push: check-vars ## 📤 Push container image to registry
-	@figlet $@ || true
-	docker push $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG)
+# push: check-vars ## 📤 Push container image to registry
+# 	@figlet $@ || true
+# 	docker push $(IMAGE_REG)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 helm-docs: ## 📜 Update docs & readme for Helm chart
 	@figlet $@ || true

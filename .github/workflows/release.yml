@@ -52,11 +52,11 @@ jobs:
           IMAGE_TAG: ${{ env.VERSION }}
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
-          make image push
+          make image IMAGE_EXTRA_ARGS=--push
 
       - name: Build & push images - latest tagged
         env:
           IMAGE_TAG: 'latest'
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
-          make image push
+          make image IMAGE_EXTRA_ARGS=--push
