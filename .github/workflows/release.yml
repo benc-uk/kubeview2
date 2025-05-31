@@ -48,4 +48,4 @@ jobs:
           IMAGE_TAG: latest
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
-          just image push
+          make image push
